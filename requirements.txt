@@ -1,0 +1,41 @@
+absl-py==2.3.1
+asttokens==3.0.1
+certifi==2026.4.22
+charset-normalizer==3.4.7
+colorama==0.4.6
+diff_gaussian_rasterization @ file:///data/project/GS/gaussian-splatting/submodules/diff-gaussian-rasterization
+executing==2.2.1
+fused_ssim @ file:///data/project/GS/gaussian-splatting/submodules/fused-ssim
+grpcio==1.80.0
+icecream==2.2.0
+idna==3.13
+importlib_metadata==8.7.1
+joblib==1.5.3
+lpips==0.1.4
+Markdown==3.9
+MarkupSafe==3.0.3
+numpy==1.26.4
+opencv-python==4.13.0.92
+packaging==26.2
+pillow==11.3.0
+plyfile==0.8.1
+protobuf==6.33.6
+Pygments==2.20.0
+requests==2.32.5
+ruff==0.15.12
+scikit-learn==1.6.1
+scipy==1.13.1
+simple_knn @ file:///data/project/GS/gaussian-splatting/submodules/simple-knn
+six==1.17.0
+tensorboard==2.20.0
+tensorboard-data-server==0.7.2
+threadpoolctl==3.6.0
+torch @ file:///data/project/torch1.13.0%2Bcu116/torch-1.13.0%2Bcu116-cp39-cp39-linux_x86_64.whl
+torch_cluster==1.6.3
+torchaudio @ file:///data/project/torch1.13.0%2Bcu116/torchaudio-0.13.0%2Bcu116-cp39-cp39-linux_x86_64.whl
+torchvision @ file:///data/project/torch1.13.0%2Bcu116/torchvision-0.14.0%2Bcu116-cp39-cp39-linux_x86_64.whl
+tqdm==4.67.3
+typing_extensions==4.15.0
+urllib3==2.6.3
+Werkzeug==3.1.8
+zipp==3.23.1
