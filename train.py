@@ -25,6 +25,8 @@ from arguments import ModelParams, PipelineParams, OptimizationParams
 from utils.general_utils import safe_state, get_expon_lr_func
 from utils.elbo import ELBOController
 
+from prune import prune_list, calculate_v_imp_score
+
 import numpy as np
 import logging
 # try:
@@ -195,6 +197,11 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
             if (iteration in saving_iterations):
                 print("\n[ITER {}] Saving Gaussians".format(iteration))
                 scene.save(iteration)
+                if iteration == saving_iterations[-1]:
+                    print("Generating Importance Scores....")
+                    gaussian_list, imp_list = prune_list(gaussians, scene, pipe, background)
+                    v_list = calculate_v_imp_score(gaussians, imp_list, args.v_pow)
+                    np.savez(os.path.join(scene.model_path,"imp_score"), v_list.cpu().detach().numpy()) 
 
             # Densification
             if iteration < opt.densify_until_iter:
@@ -220,6 +227,7 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
             if (iteration in checkpoint_iterations):
                 print("\n[ITER {}] Saving Checkpoint".format(iteration))
                 torch.save((gaussians.capture(), iteration), scene.model_path + "/chkpnt" + str(iteration) + ".pth")
+                
 
 def training_report(tb_writer, test_logger, iteration, Ll1, loss, l1_loss, elapsed, testing_iterations, scene : Scene, renderFunc, renderArgs):
     # 完全跳过tensorboard记录，只使用日志记录
@@ -352,6 +360,7 @@ if __name__ == "__main__":
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--checkpoint_iterations", nargs="+", type=int, default=[])
     parser.add_argument("--start_checkpoint", type=str, default = None)
+    parser.add_argument("--v_pow", type=float, default=0.1)
     
     
     args = parser.parse_args(sys.argv[1:])
