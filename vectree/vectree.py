@@ -15,7 +15,7 @@ def parse_args():
     parser.add_argument("--save_path", type=str, default='./output/room')  
     parser.add_argument("--no_load_data", type=bool, default=False)
     parser.add_argument("--no_save_ply", type=bool, default=False)
-    parser.add_argument("--sh_degree", type=int, default=2)
+    parser.add_argument("--sh_degree", type=int, default=3)
 
     parser.add_argument("--iteration_num", type=float, default=1000)
     parser.add_argument("--vq_ratio", type=float, default=0.6)
