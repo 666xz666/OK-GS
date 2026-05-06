@@ -27,11 +27,12 @@ from utils.elbo import ELBOController
 
 import numpy as np
 import logging
-try:
-    from torch.utils.tensorboard import SummaryWriter
-    TENSORBOARD_FOUND = True
-except ImportError:
-    TENSORBOARD_FOUND = False
+# try:
+#     from torch.utils.tensorboard import SummaryWriter
+#     TENSORBOARD_FOUND = True
+# except ImportError:
+#     TENSORBOARD_FOUND = False
+TENSORBOARD_FOUND = False
 
 # Import scene complexity analyzer for adaptive densification threshold
 try:
@@ -292,7 +293,7 @@ def training_report(tb_writer, test_logger, iteration, Ll1, loss, l1_loss, elaps
                 fps = 1.0 / avg_render_time if avg_render_time > 0 else 0.0
                 
                 # 记录评估指标到日志 - 精简版
-                test_logger.info(f"ITER {iteration} {config['name']} PSNR: {psnr_test:.2f} SSIM: {ssim_test:.4f} LPIPS: {lpips_test:.4f} FPS: {fps:.2f} PLY_Size: {ply_size_mb:.2f}MB Points: {scene.gaussians.get_xyz.shape[0]}")
+                test_logger.info(f"ITER {iteration} {config['name']} PSNR: {psnr_test:.2f} SSIM: {ssim_test:.4f} LPIPS: {lpips_test:.4f} FPS: {fps:.2f} MEM: {ply_size_mb:.2f}MB Points: {scene.gaussians.get_xyz.shape[0]}")
 
         torch.cuda.empty_cache()
 
