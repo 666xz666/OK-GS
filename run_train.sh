@@ -55,27 +55,27 @@ for idx in "${!scenes[@]}"; do
 
   echo "Start: $scene"
 
-  # CUDA_VISIBLE_DEVICES="$cuda_device" python train.py \
-  #   --port "$port" \
-  #   --resolution "$factor" \
-  #   -s "${path_base}/${dset}/${scene}" \
-  #   -m "$path_output" \
-  #   --eval \
-  #   # --use_elbo_adaptive 
-
-  ########################
-  # testing
   CUDA_VISIBLE_DEVICES="$cuda_device" python train.py \
     --port "$port" \
-    --iteration 1000 \
-    --test_iterations 500 1000 \
-    --save_iterations 1000 \
-    --densify_until_iter 500 \
-    --opacity_reset_interval 300 \
     --resolution "$factor" \
     -s "${path_base}/${dset}/${scene}" \
     -m "$path_output" \
     --eval \
+    # --use_elbo_adaptive 
+
+  ########################
+  # testing
+  # CUDA_VISIBLE_DEVICES="$cuda_device" python train.py \
+  #   --port "$port" \
+  #   --iteration 1000 \
+  #   --test_iterations 500 1000 \
+  #   --save_iterations 1000 \
+  #   --densify_until_iter 500 \
+  #   --opacity_reset_interval 300 \
+  #   --resolution "$factor" \
+  #   -s "${path_base}/${dset}/${scene}" \
+  #   -m "$path_output" \
+  #   --eval \
     # --use_elbo_adaptive 
   ########################
 
