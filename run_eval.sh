@@ -59,6 +59,18 @@ VQ_RENAMED="${TEST_DIR}/${ITER_NAME}_vq"
 mv "$VQ_DIR" "$VQ_RENAMED"
 echo "  -> $VQ_RENAMED"
 
+# ---- Compute MEM (storage) sizes ----
+ACTUAL_ITER="${ITER_NAME#ours_}"
+ORIG_PLY="$MODEL_PATH/point_cloud/iteration_$ACTUAL_ITER/point_cloud.ply"
+VQ_ZIP="$MODEL_PATH/extreme_saving.zip"
+
+ORIG_MEM=$(stat -c%s "$ORIG_PLY" 2>/dev/null || echo 0)
+VQ_MEM=$(stat -c%s "$VQ_ZIP" 2>/dev/null || echo 0)
+
+echo ""
+echo "  Original PLY : $(numfmt --to=iec $ORIG_MEM) ($ORIG_PLY)"
+echo "  VQ zip       : $(numfmt --to=iec $VQ_MEM) ($VQ_ZIP)"
+
 # ---- Step 3: Run metrics on both ----
 echo ""
 echo "============================================================"
@@ -77,7 +89,7 @@ VQ_KEY="${ITER_NAME}_vq"
 
 # Use python inline to parse and print
 python -c "
-import json
+import json, os
 
 with open('$MODEL_PATH/results.json') as f:
     data = json.load(f)
@@ -85,17 +97,27 @@ with open('$MODEL_PATH/results.json') as f:
 orig = data['$ORIG_KEY']
 vq   = data['$VQ_KEY']
 
+orig_mem = $ORIG_MEM
+vq_mem   = $VQ_MEM
+
+def fmt_mem(b):
+    return f'{b / 1024 / 1024:.2f} MB'
+
 print()
-print(f\"  {'Metric':<8} {'Original':>10} {'VQ':>10} {'Delta':>10}\")
-print('  ' + '-' * 42)
+print(f\"  {'Metric':<8} {'Original':>14} {'VQ':>14} {'Delta':>14}\")
+print('  ' + '-' * 54)
 for m in ['SSIM', 'PSNR', 'LPIPS']:
     o = orig[m]
     v = vq[m]
     d = v - o
     arrow = '↓' if m == 'LPIPS' else '↑'
-    print(f\"  {m:<8} {o:>10.4f} {v:>10.4f} {d:>+10.4f} {arrow}\")
+    print(f\"  {m:<8} {o:>14.4f} {v:>14.4f} {d:>+14.4f} {arrow}\")
+# MEM row
+mem_o = fmt_mem(orig_mem)
+mem_v = fmt_mem(vq_mem)
+print(f\"  {'MEM':<8} {mem_o:>14} {mem_v:>14} {'':>14}\")
 print()
-print('  (SSIM/PSNR ↑ is better, LPIPS ↓ is better)')
+print('  (SSIM/PSNR ↑ is better, LPIPS/MEM ↓ is better)')
 
 comp = {
     'original': orig,
@@ -104,6 +126,13 @@ comp = {
         'SSIM': vq['SSIM'] - orig['SSIM'],
         'PSNR': vq['PSNR'] - orig['PSNR'],
         'LPIPS': vq['LPIPS'] - orig['LPIPS']
+    },
+    'mem': {
+        'original_bytes': orig_mem,
+        'vq_bytes': vq_mem,
+        'original_mb': round(orig_mem / 1024 / 1024, 2),
+        'vq_mb': round(vq_mem / 1024 / 1024, 2),
+        'compression_ratio': round(orig_mem / vq_mem, 2) if vq_mem > 0 else 0
     }
 }
 with open('$MODEL_PATH/comparison_vq.json', 'w') as f:
