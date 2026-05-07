@@ -20,6 +20,7 @@ from utils.general_utils import safe_state
 from argparse import ArgumentParser
 from arguments import ModelParams, PipelineParams, get_combined_args
 from gaussian_renderer import GaussianModel
+import time
 
 
 def render_set(model_path, name, iteration, views, gaussians, pipeline, background):
@@ -29,8 +30,11 @@ def render_set(model_path, name, iteration, views, gaussians, pipeline, backgrou
     makedirs(render_path, exist_ok=True)
     makedirs(gts_path, exist_ok=True)
 
+    render_times = []
     for idx, view in enumerate(tqdm(views, desc="Rendering progress")):
+        t_start = time.time()
         rendering = render(view, gaussians, pipeline, background)["render"]
+        render_times.append(time.time() - t_start)
         gt = view.original_image[0:3, :, :]
         torchvision.utils.save_image(
             rendering, os.path.join(render_path, "{0:05d}".format(idx) + ".png")
@@ -38,6 +42,9 @@ def render_set(model_path, name, iteration, views, gaussians, pipeline, backgrou
         torchvision.utils.save_image(
             gt, os.path.join(gts_path, "{0:05d}".format(idx) + ".png")
         )
+    avg_render_time = sum(render_times) / len(render_times) if render_times else 0
+    fps = 1.0 / avg_render_time if avg_render_time > 0 else 0
+    print(f"FPS: {fps:.2f} (avg {avg_render_time*1000:.1f}ms/frame, {len(views)} frames)")
 
 
 def render_sets(

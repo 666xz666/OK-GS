@@ -35,7 +35,9 @@ echo ""
 echo "============================================================"
 echo "Step 1/4: Rendering original (PLY) model ..."
 echo "============================================================"
-python "$SCRIPT_DIR/render.py" -m "$MODEL_PATH" --iteration "$ITERATION" --skip_train
+RENDER_OUT=$(python "$SCRIPT_DIR/render.py" -m "$MODEL_PATH" --iteration "$ITERATION" --skip_train 2>&1)
+echo "$RENDER_OUT"
+ORIG_FPS=$(echo "$RENDER_OUT" | grep -oP 'FPS:\s*\K[\d.]+')
 
 ORIG_DIR=$(ls -dt "$TEST_DIR"/ours_* 2>/dev/null | head -1)
 if [ -z "$ORIG_DIR" ]; then
@@ -52,7 +54,9 @@ echo ""
 echo "============================================================"
 echo "Step 2/4: Rendering VQ quantized model ..."
 echo "============================================================"
-python "$SCRIPT_DIR/render.py" -m "$MODEL_PATH" --iteration "$ITERATION" --skip_train --load_vq
+RENDER_OUT=$(python "$SCRIPT_DIR/render.py" -m "$MODEL_PATH" --iteration "$ITERATION" --skip_train --load_vq 2>&1)
+echo "$RENDER_OUT"
+VQ_FPS=$(echo "$RENDER_OUT" | grep -oP 'FPS:\s*\K[\d.]+')
 
 VQ_DIR=$(ls -dt "$TEST_DIR"/ours_* 2>/dev/null | head -1)
 VQ_RENAMED="${TEST_DIR}/${ITER_NAME}_vq"
@@ -99,6 +103,8 @@ vq   = data['$VQ_KEY']
 
 orig_mem = $ORIG_MEM
 vq_mem   = $VQ_MEM
+orig_fps = $ORIG_FPS
+vq_fps   = $VQ_FPS
 
 def fmt_mem(b):
     return f'{b / 1024 / 1024:.2f} MB'
@@ -116,8 +122,10 @@ for m in ['SSIM', 'PSNR', 'LPIPS']:
 mem_o = fmt_mem(orig_mem)
 mem_v = fmt_mem(vq_mem)
 print(f\"  {'MEM':<8} {mem_o:>14} {mem_v:>14} {'':>14}\")
+# FPS row
+print(f\"  {'FPS':<8} {orig_fps:>13.2f}  {vq_fps:>13.2f}  {'':>14}\")
 print()
-print('  (SSIM/PSNR ↑ is better, LPIPS/MEM ↓ is better)')
+print('  (SSIM/PSNR/FPS ↑ is better, LPIPS/MEM ↓ is better)')
 
 comp = {
     'original': orig,
@@ -133,6 +141,10 @@ comp = {
         'original_mb': round(orig_mem / 1024 / 1024, 2),
         'vq_mb': round(vq_mem / 1024 / 1024, 2),
         'compression_ratio': round(orig_mem / vq_mem, 2) if vq_mem > 0 else 0
+    },
+    'fps': {
+        'original': orig_fps,
+        'vq': vq_fps
     }
 }
 with open('$MODEL_PATH/comparison_vq.json', 'w') as f:
