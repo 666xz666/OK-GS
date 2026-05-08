@@ -1,4 +1,4 @@
-model_path=output/mipnerf360/room
+model_path=./output/mipnerf360/bicycle
 
 python render_video.py \
     -m ${model_path} \

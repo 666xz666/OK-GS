@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # path_base=<dataset_base_path>
-output_base=/data/project/GS/gaussian-splatting/output
+output_base=./output
 path_base=/data/datasets
 
 cuda_device=0
