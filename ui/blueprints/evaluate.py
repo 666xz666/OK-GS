@@ -5,13 +5,14 @@ import shutil
 import json
 from argparse import Namespace
 
-from flask import Blueprint, render_template, request, jsonify, url_for
+from flask import Blueprint, render_template, request, jsonify, url_for, session
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from ui.config import DATASET_ROOT, MODEL_ROOT
 from ui.forms import scan_models
 from ui.task_manager import TaskManager
+from ui.translations import make_translator
 
 eval_bp = Blueprint('eval', __name__)
 
@@ -52,6 +53,7 @@ def start_eval():
             'iteration': iteration,
             'compare_vq': compare_vq and has_vq,
             'skip_train': data.get('skip_train', 'true').lower() == 'true',
+            'lang': session.get('lang', 'zh'),
         },
         lambda task: _run_evaluation(task)
     )
@@ -59,13 +61,13 @@ def start_eval():
 
 
 def _run_evaluation(task):
+    _ = make_translator(task.params.get('lang', 'zh'))
     model_abs = os.path.join(MODEL_ROOT, task.params['model_path'])
     iteration = task.params['iteration']
     compare_vq = task.params.get('compare_vq', True)
     skip_train = task.params.get('skip_train', True)
     loaded_iter = iteration
 
-    # Read source_path from cfg_args
     cfg_path = os.path.join(model_abs, 'cfg_args')
     with open(cfg_path) as f:
         cfg_str = f.read()
@@ -88,22 +90,20 @@ def _run_evaluation(task):
     args_dict['data_device'] = 'cuda'
     args = Namespace(**args_dict)
 
-    # Clean old comparison directories
     test_dir = os.path.join(model_abs, 'test')
     if os.path.isdir(test_dir):
         for entry in os.listdir(test_dir):
             entry_path = os.path.join(test_dir, entry)
             if os.path.isdir(entry_path) and ('_original' in entry or '_vq' in entry):
                 shutil.rmtree(entry_path)
-                print(f"Cleaned old directory: {entry}")
+                print(_('log.cleaned_old_dir', entry=entry))
 
     from render import render_sets
 
     # Step 1: Render original PLY
-    print("\n=== Rendering Original Model ===")
+    print(_('log.rendering_original'))
     render_sets(args, loaded_iter, args, skip_train=skip_train, skip_test=False, load_vq=False)
 
-    # Find and rename original render dir
     ours_dir_original = None
     for entry in os.listdir(test_dir):
         entry_path = os.path.join(test_dir, entry)
@@ -111,7 +111,7 @@ def _run_evaluation(task):
             new_name = entry + '_original'
             shutil.move(entry_path, os.path.join(test_dir, new_name))
             ours_dir_original = new_name
-            print(f"Renamed {entry} -> {new_name}")
+            print(_('log.renamed', old=entry, new=new_name))
             break
 
     original_fps = None
@@ -119,11 +119,11 @@ def _run_evaluation(task):
         render_log_path = os.path.join(test_dir, ours_dir_original, 'renders')
         if os.path.isdir(render_log_path):
             n_frames = len([f for f in os.listdir(render_log_path) if f.endswith('.png')])
-            print(f"Original model: {n_frames} test frames rendered")
+            print(_('log.original_frames', n=n_frames))
 
     # Step 2: Render VQ model
     if compare_vq:
-        print("\n=== Rendering VQ Model ===")
+        print(_('log.rendering_vq'))
         render_sets(args, loaded_iter, args, skip_train=skip_train, skip_test=False, load_vq=True)
 
         for entry in os.listdir(test_dir):
@@ -131,11 +131,11 @@ def _run_evaluation(task):
             if os.path.isdir(entry_path) and entry.startswith('ours_') and '_original' not in entry and '_vq' not in entry:
                 new_name = entry + '_vq'
                 shutil.move(entry_path, os.path.join(test_dir, new_name))
-                print(f"Renamed {entry} -> {new_name}")
+                print(_('log.renamed', old=entry, new=new_name))
                 break
 
     # Step 3: Compute metrics
-    print("\n=== Computing Metrics ===")
+    print(_('log.computing_metrics'))
     from metrics import evaluate
     evaluate([model_abs])
 
@@ -180,7 +180,6 @@ def _run_evaluation(task):
         ratio = comparison['mem']['vq_bytes'] / comparison['mem']['original_bytes'] * 100
         comparison['mem']['compression_ratio'] = round(ratio, 1)
 
-    # Write comparison JSON
     cmp_path = os.path.join(model_abs, 'comparison_vq.json')
     with open(cmp_path, 'w') as f:
         json.dump(comparison, f, indent=2)
@@ -199,4 +198,4 @@ def _run_evaluation(task):
         if 'mem' in comparison:
             print(f"  {'MEM':<12} {comparison['mem'].get('original_mb', 'N/A'):<12} {comparison['mem'].get('vq_mb', 'N/A'):<12}")
     print("=" * 60)
-    print("Evaluation complete.")
+    print(_('log.eval_complete'))

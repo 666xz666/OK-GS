@@ -3,13 +3,14 @@ import sys
 from argparse import Namespace
 from unittest.mock import patch
 
-from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
+from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, session
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from ui.config import DATASET_ROOT, MODEL_ROOT
 from ui.forms import scan_datasets, scan_models, build_train_args
 from ui.task_manager import TaskManager
+from ui.translations import make_translator
 
 train_bp = Blueprint('train', __name__)
 
@@ -45,6 +46,7 @@ def start_train():
             'iterations': data.get('iterations', '30000'),
             'v_pow': data.get('v_pow', '0.1'),
             'eval': data.get('eval', 'true'),
+            'lang': session.get('lang', 'zh'),
         },
         lambda task: _run_training(task)
     )
@@ -52,6 +54,8 @@ def start_train():
 
 
 def _run_training(task):
+    _ = make_translator(task.params.get('lang', 'zh'))
+
     from arguments import ModelParams, PipelineParams, OptimizationParams
     from argparse import ArgumentParser
 
@@ -83,9 +87,9 @@ def _run_training(task):
     args.quiet = False
     args.save_iterations.append(args.iterations)
 
-    print(f"Optimizing {args.model_path}")
-    print(f"Source: {args.source_path}")
-    print(f"Resolution: {args.resolution}, SH Degree: {args.sh_degree}, Iterations: {args.iterations}")
+    print(_('log.optimizing', path=args.model_path))
+    print(_('log.source', path=args.source_path))
+    print(_('log.train_config', res=args.resolution, sh=args.sh_degree, iters=args.iterations))
 
     from utils.general_utils import safe_state
     safe_state(args.quiet)
@@ -104,12 +108,11 @@ def _run_training(task):
     finally:
         network_gui.init = original_init
 
-    print("Training complete.")
+    print(_('log.training_complete'))
 
-    # Verify outputs
     imp_path = os.path.join(args.model_path, 'imp_score.npz')
     ply_dir = os.path.join(args.model_path, 'point_cloud')
     if os.path.isfile(imp_path):
-        print(f"Importance scores saved: {imp_path}")
+        print(_('log.imp_scores_saved', path=imp_path))
     if os.path.isdir(ply_dir):
-        print(f"Model directory: {ply_dir}")
+        print(_('log.model_dir', path=ply_dir))

@@ -1,28 +1,32 @@
+var I = window.I18N || {};
+
 function submitTask(event, endpoint) {
   event.preventDefault();
   var form = event.target;
   var data = new FormData(form);
   var logPanel = document.getElementById('log-panel');
   if (logPanel) {
-    logPanel.textContent = 'Submitting task...';
+    logPanel.textContent = I.submitting_task || 'Submitting task...';
   }
 
   fetch(endpoint, { method: 'POST', body: data })
     .then(function(r) { return r.json(); })
     .then(function(resp) {
+      var errPrefix = I.error_prefix || 'ERROR: ';
       if (resp.error) {
-        if (logPanel) logPanel.textContent = 'ERROR: ' + resp.error;
-        alert('Error: ' + resp.error);
+        if (logPanel) logPanel.textContent = errPrefix + resp.error;
+        alert(errPrefix + resp.error);
         return;
       }
-      if (logPanel) logPanel.textContent = 'Task ' + resp.task_id + ' started.\n';
+      var started = I.task_started || 'Task {id} started.\n';
+      if (logPanel) logPanel.textContent = started.replace('{id}', resp.task_id);
       if (resp.redirect) {
         var taskId = resp.task_id;
         connectSSE(taskId, logPanel);
       }
     })
     .catch(function(err) {
-      if (logPanel) logPanel.textContent = 'ERROR: ' + err;
+      if (logPanel) logPanel.textContent = (I.error_prefix || 'ERROR: ') + err;
     });
 }
 
@@ -33,10 +37,11 @@ function connectSSE(taskId, logPanel) {
     var msg = e.data;
     if (msg.startsWith('__STATUS__:')) {
       var status = msg.replace('__STATUS__:', '');
-      logPanel.textContent += '\n--- Task ' + status + ' ---\n';
+      var statusMsg = I.task_status || '\n--- Task {status} ---\n';
+      logPanel.textContent += statusMsg.replace('{status}', status);
       es.close();
     } else if (msg.startsWith('__ERROR__:')) {
-      logPanel.textContent += '\nERROR: ' + msg.replace('__ERROR__:', '') + '\n';
+      logPanel.textContent += '\n' + (I.error_prefix || 'ERROR: ') + msg.replace('__ERROR__:', '') + '\n';
     } else {
       logPanel.textContent += msg;
     }
@@ -54,7 +59,7 @@ function viewLog(taskId) {
   if (card) card.style.display = 'block';
   if (label) label.textContent = taskId;
   if (panel) {
-    panel.textContent = 'Connecting...\n';
+    panel.textContent = (I.connecting || 'Connecting...') + '\n';
     connectSSE(taskId, panel);
   }
 }
@@ -68,11 +73,18 @@ function pollTaskStatus() {
       .then(function(data) {
         var badge = row.querySelector('.badge');
         if (badge && data.status) {
-          badge.className = 'badge bg-' + ({
+          var badgeLabels = {
+            'pending': I.badge_pending || 'Pending',
+            'running': I.badge_running || 'Running',
+            'completed': I.badge_completed || 'Completed',
+            'failed': I.badge_failed || 'Failed'
+          };
+          var badgeClasses = {
             'pending': 'secondary', 'running': 'primary',
             'completed': 'success', 'failed': 'danger'
-          })[data.status] || 'secondary';
-          badge.textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+          };
+          badge.className = 'badge bg-' + (badgeClasses[data.status] || 'secondary');
+          badge.textContent = badgeLabels[data.status] || data.status;
         }
       });
   });

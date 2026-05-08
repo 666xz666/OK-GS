@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2 class="mb-4">Model Browser</h2>
+<h2 class="mb-4">{{ _('models.heading') }}</h2>
 
 {% if models %}
 <div class="card">
@@ -9,14 +9,14 @@
     <table class="table table-hover mb-0">
       <thead>
         <tr>
-          <th>Model</th>
-          <th>Iterations</th>
-          <th>PLY</th>
-          <th>VQ</th>
-          <th>Importance</th>
-          <th>Results</th>
-          <th>Video</th>
-          <th>Metrics Summary</th>
+          <th>{{ _('models.model_col') }}</th>
+          <th>{{ _('models.iterations_col') }}</th>
+          <th>{{ _('models.ply_col') }}</th>
+          <th>{{ _('models.vq_col') }}</th>
+          <th>{{ _('models.importance_col') }}</th>
+          <th>{{ _('models.results_col') }}</th>
+          <th>{{ _('models.video_col') }}</th>
+          <th>{{ _('models.metrics_summary') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -44,7 +44,7 @@
             </small>
             {% endfor %}
           {% else %}
-            <span class="text-muted">—</span>
+            <span class="text-muted">&mdash;</span>
           {% endif %}
         </td>
       </tr>
@@ -54,8 +54,8 @@
   </div>
 </div>
 {% else %}
-<div class="alert alert-info">No models found under <code>{{ model_root }}</code>.</div>
-<div class="mt-3"><a href="/train" class="btn btn-primary">Train a Model</a></div>
+<div class="alert alert-info">{{ _('models.no_models', root=model_root) }}</div>
+<div class="mt-3"><a href="/train" class="btn btn-primary">{{ _('models.train_a_model') }}</a></div>
 {% endif %}
 
 {% endblock %}

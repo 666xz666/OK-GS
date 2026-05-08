@@ -2,13 +2,14 @@ import os
 import sys
 from argparse import Namespace
 
-from flask import Blueprint, render_template, request, jsonify, url_for
+from flask import Blueprint, render_template, request, jsonify, url_for, session
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from ui.config import DATASET_ROOT, MODEL_ROOT
 from ui.forms import scan_models
 from ui.task_manager import TaskManager
+from ui.translations import make_translator
 
 videogen_bp = Blueprint('videogen', __name__)
 
@@ -52,6 +53,7 @@ def start_videogen():
             'fps': data.get('fps', '30'),
             'skip_train': data.get('skip_train', 'true').lower() == 'true',
             'skip_test': data.get('skip_test', 'true').lower() == 'true',
+            'lang': session.get('lang', 'zh'),
         },
         lambda task: _run_videogen(task)
     )
@@ -59,6 +61,7 @@ def start_videogen():
 
 
 def _run_videogen(task):
+    _ = make_translator(task.params.get('lang', 'zh'))
     model_abs = os.path.join(MODEL_ROOT, task.params['model_path'])
     iteration = task.params['iteration']
     load_vq = task.params.get('load_vq', True)
@@ -69,7 +72,6 @@ def _run_videogen(task):
     skip_train = task.params.get('skip_train', True)
     skip_test = task.params.get('skip_test', True)
 
-    # Read cfg_args
     cfg_path = os.path.join(model_abs, 'cfg_args')
     with open(cfg_path) as f:
         cfg_str = f.read()
@@ -98,9 +100,9 @@ def _run_videogen(task):
 
     from render_video import render_sets
 
-    print(f"Generating video for: {model_abs}")
-    print(f"Iteration: {iteration}, Load VQ: {load_vq}")
-    print(f"Video: {do_video}, Circular: {do_circular}, FPS: {fps}, Radius: {radius}")
+    print(_('log.generating_video', path=model_abs))
+    print(_('log.video_config', iter=iteration, load_vq=load_vq))
+    print(_('log.video_params_detail', video=do_video, circ=do_circular, fps=fps, radius=radius))
 
     render_sets(
         args, iteration, args,
@@ -113,10 +115,10 @@ def _run_videogen(task):
         args=args,
     )
 
-    print("Video generation complete.")
+    print(_('log.video_complete'))
     video_dir = os.path.join(model_abs, 'video')
     if os.path.isdir(video_dir):
         mp4s = [f for f in os.listdir(video_dir) if f.endswith('.mp4')]
         for mp4 in mp4s:
             size_mb = os.path.getsize(os.path.join(video_dir, mp4)) / 1024 / 1024
-            print(f"Output video: {mp4} ({size_mb:.1f} MB)")
+            print(_('log.output_video', file=mp4, size=size_mb))

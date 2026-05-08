@@ -1,70 +1,70 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2 class="mb-4">1. Training</h2>
+<h2 class="mb-4">{{ _('train.heading') }}</h2>
 
 <div class="row">
   <div class="col-md-7">
     <div class="card">
-      <div class="card-header fw-bold">Training Parameters</div>
+      <div class="card-header fw-bold">{{ _('train.train_params') }}</div>
       <div class="card-body">
         <form id="train-form" onsubmit="submitTask(event, '/train/start')">
           <div class="mb-3">
-            <label class="form-label">Dataset</label>
+            <label class="form-label">{{ _('train.dataset') }}</label>
             <select name="source_path" class="form-select" required>
-              <option value="">-- Select Dataset --</option>
+              <option value="">{{ _('train.select_dataset') }}</option>
               {% for dset in datasets %}
               <optgroup label="{{ dset.name }}">
                 {% for scene in dset.scenes %}
-                <option value="{{ scene.path }}">{{ dset.name }}/{{ scene.name }}{% if not scene.has_colmap %} (no COLMAP){% endif %}</option>
+                <option value="{{ scene.path }}">{{ dset.name }}/{{ scene.name }}{% if not scene.has_colmap %} ({{ _('train.no_colmap') }}){% endif %}</option>
                 {% endfor %}
               </optgroup>
               {% endfor %}
             </select>
-            <div class="form-text">Dataset root: {{ dataset_root }}</div>
+            <div class="form-text">{{ _('train.dataset_root_label', root=dataset_root) }}</div>
           </div>
 
           <div class="mb-3">
-            <label class="form-label">Model Output Path</label>
-            <input type="text" name="model_path" class="form-control" placeholder="auto-derived from dataset">
-            <div class="form-text">Leave empty for auto: {{ model_root }}/&lt;dataset&gt;/&lt;scene&gt;</div>
+            <label class="form-label">{{ _('train.model_path') }}</label>
+            <input type="text" name="model_path" class="form-control" placeholder="{{ _('train.model_path_placeholder') }}">
+            <div class="form-text">{{ _('train.model_path_help', root=model_root) }}</div>
           </div>
 
           <div class="row">
             <div class="col-md-4 mb-3">
-              <label class="form-label">Resolution</label>
+              <label class="form-label">{{ _('train.resolution') }}</label>
               <select name="resolution" class="form-select">
-                <option value="-1">Full (1x)</option>
-                <option value="2" selected>Half (2x)</option>
-                <option value="4">Quarter (4x)</option>
-                <option value="8">Eighth (8x)</option>
+                <option value="-1">{{ _('train.resolution_full') }}</option>
+                <option value="2" selected>{{ _('train.resolution_half') }}</option>
+                <option value="4">{{ _('train.resolution_quarter') }}</option>
+                <option value="8">{{ _('train.resolution_eighth') }}</option>
               </select>
             </div>
             <div class="col-md-4 mb-3">
-              <label class="form-label">Iterations</label>
+              <label class="form-label">{{ _('train.iterations') }}</label>
               <input type="number" name="iterations" class="form-control" value="30000" min="1000" step="1000">
             </div>
             <div class="col-md-4 mb-3">
-              <label class="form-label">SH Degree</label>
+              <label class="form-label">{{ _('train.sh_degree') }}</label>
               <input type="number" name="sh_degree" class="form-control" value="3" min="0" max="4">
             </div>
           </div>
 
           <div class="row">
             <div class="col-md-6 mb-3">
-              <label class="form-label">v_pow (volume power)</label>
+              <label class="form-label">{{ _('train.v_pow') }}</label>
               <input type="number" name="v_pow" class="form-control" value="0.1" step="0.05" min="0.01">
             </div>
             <div class="col-md-6 mb-3 d-flex align-items-end">
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" name="eval" value="true" id="evalCheck" checked>
-                <label class="form-check-label" for="evalCheck">Use eval split (hold out test set)</label>
+                <label class="form-check-label" for="evalCheck">{{ _('train.eval_split') }}</label>
               </div>
             </div>
           </div>
 
-          <button type="submit" class="btn btn-primary">Start Training</button>
-          <a href="/models" class="btn btn-outline-secondary">Browse Existing</a>
+          <button type="submit" class="btn btn-primary">{{ _('train.start_training') }}</button>
+          <a href="/models" class="btn btn-outline-secondary">{{ _('train.browse_existing') }}</a>
         </form>
       </div>
     </div>
@@ -72,9 +72,9 @@
 
   <div class="col-md-5">
     <div class="card">
-      <div class="card-header fw-bold">Log Output</div>
+      <div class="card-header fw-bold">{{ _('train.log_output') }}</div>
       <div class="card-body p-0">
-        <pre id="log-panel" class="log-panel p-3 mb-0" style="height:400px;overflow-y:auto;background:#1e1e1e;color:#d4d4d4;font-size:13px;">Waiting for task submission...</pre>
+        <pre id="log-panel" class="log-panel p-3 mb-0" style="height:400px;overflow-y:auto;background:#1e1e1e;color:#d4d4d4;font-size:13px;">{{ _('train.waiting_for_task') }}</pre>
       </div>
     </div>
   </div>

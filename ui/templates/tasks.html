@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2 class="mb-4">Tasks</h2>
+<h2 class="mb-4">{{ _('tasks.heading') }}</h2>
 
 {% if tasks %}
 <div class="card">
@@ -9,11 +9,11 @@
     <table class="table table-hover mb-0">
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Type</th>
-          <th>Status</th>
-          <th>Created</th>
-          <th>Action</th>
+          <th>{{ _('tasks.id_col') }}</th>
+          <th>{{ _('tasks.type_col') }}</th>
+          <th>{{ _('tasks.status_col') }}</th>
+          <th>{{ _('tasks.created_col') }}</th>
+          <th>{{ _('tasks.action_col') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -22,17 +22,17 @@
         <td><code>{{ t.id }}</code></td>
         <td>{{ t.type }}</td>
         <td>
-          {% if t.status == 'pending' %}<span class="badge bg-secondary">Pending</span>
-          {% elif t.status == 'running' %}<span class="badge bg-primary">Running</span>
-          {% elif t.status == 'completed' %}<span class="badge bg-success">Completed</span>
-          {% elif t.status == 'failed' %}<span class="badge bg-danger">Failed</span>
+          {% if t.status == 'pending' %}<span class="badge bg-secondary">{{ _('tasks.badge_pending') }}</span>
+          {% elif t.status == 'running' %}<span class="badge bg-primary">{{ _('tasks.badge_running') }}</span>
+          {% elif t.status == 'completed' %}<span class="badge bg-success">{{ _('tasks.badge_completed') }}</span>
+          {% elif t.status == 'failed' %}<span class="badge bg-danger">{{ _('tasks.badge_failed') }}</span>
           {% endif %}
         </td>
-        <td><small>—</small></td>
+        <td><small>&mdash;</small></td>
         <td>
-          <button class="btn btn-sm btn-outline-secondary" onclick="viewLog('{{ t.id }}')" {% if t.status == 'pending' %}disabled{% endif %}>View Log</button>
+          <button class="btn btn-sm btn-outline-secondary" onclick="viewLog('{{ t.id }}')" {% if t.status == 'pending' %}disabled{% endif %}>{{ _('tasks.view_log') }}</button>
           {% if t.status == 'completed' and t.type == 'eval' %}
-          <a href="/models/{{ t.params.model_path }}" class="btn btn-sm btn-outline-primary">View Results</a>
+          <a href="/models/{{ t.params.model_path }}" class="btn btn-sm btn-outline-primary">{{ _('tasks.view_results') }}</a>
           {% endif %}
         </td>
       </tr>
@@ -44,15 +44,15 @@
 
 <div class="card mt-4" id="log-card" style="display:none;">
   <div class="card-header d-flex justify-content-between">
-    <span class="fw-bold">Task Log: <span id="log-task-id"></span></span>
-    <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('log-card').style.display='none'">Close</button>
+    <span class="fw-bold">{{ _('tasks.task_log_label') }}<span id="log-task-id"></span></span>
+    <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('log-card').style.display='none'">{{ _('tasks.close') }}</button>
   </div>
   <div class="card-body p-0">
     <pre id="log-panel" class="p-3 mb-0" style="height:500px;overflow-y:auto;background:#1e1e1e;color:#d4d4d4;font-size:13px;"></pre>
   </div>
 </div>
 {% else %}
-<div class="alert alert-info">No tasks yet. Start a pipeline stage to see tasks here.</div>
+<div class="alert alert-info">{{ _('tasks.no_tasks') }}</div>
 {% endif %}
 
 {% endblock %}

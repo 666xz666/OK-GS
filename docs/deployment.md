@@ -65,6 +65,8 @@ gaussian-splatting/                          # 项目根目录 (/data/project/GS
 │   ├── __init__.py
 │   ├── app.py                               #   Flask 应用工厂
 │   ├── config.py                            #   配置（dataset_root / model_root / CUDA 设备）
+│   ├── translations.py                      #   中英文翻译字典 (zh/en) + make_translator()
+│   ├── language.py                          #   语言切换 Blueprint + 上下文处理器
 │   ├── task_manager.py                      #   异步任务管理器（线程 + stdout 捕获 + SSE）
 │   ├── forms.py                             #   数据集/模型扫描 & argparse Namespace 构建
 │   ├── blueprints/                          #   Flask Blueprints
@@ -232,7 +234,7 @@ bash run_videogen.sh
 ```
 Web UI 入口: http://localhost:5000
 
-1. 首页仪表盘 — 查看已有模型、数据集统计、运行中任务
+1. 首页仪表盘 — 查看已有模型、数据集统计、运行中任务 (默认中文，右上角可切换 English)
 2. /train     — 选择数据集 → 设置参数 → Start Training → 实时日志
 3. /quantize  — 选择已训练模型 → 设置 VQ 参数 → Start Quantization → 实时日志
 4. /eval      — 选择模型 → Start Evaluation → 渲染 + 指标计算 → 跳转结果

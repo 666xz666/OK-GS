@@ -5,6 +5,8 @@ import sys
 import time
 from io import StringIO
 
+from ui.translations import make_translator
+
 
 class StreamCapture:
     def __init__(self, log_queue, orig_stream):
@@ -96,7 +98,8 @@ class TaskManager:
             task.status = 'completed'
         except Exception as e:
             import traceback
-            task.log_queue.put(f'ERROR: {e}\n{traceback.format_exc()}\n')
+            _ = make_translator(task.params.get('lang', 'zh'))
+            task.log_queue.put(f'{_("misc.error")}: {e}\n{traceback.format_exc()}\n')
             task.error = str(e)
             task.status = 'failed'
         finally:

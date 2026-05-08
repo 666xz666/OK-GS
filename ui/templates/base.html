@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ current_lang }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>3DGS Pipeline UI</title>
+  <title>{{ _('page.title') }}</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   {% block head %}{% endblock %}
@@ -11,18 +11,27 @@
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-      <a class="navbar-brand" href="/">🎯 3DGS Pipeline</a>
+      <a class="navbar-brand" href="/">{{ _('nav.brand') }}</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="/train">{{ _('nav.train') }}</a></li>
+          <li class="nav-item"><a class="nav-link" href="/quantize">{{ _('nav.quantize') }}</a></li>
+          <li class="nav-item"><a class="nav-link" href="/eval">{{ _('nav.evaluate') }}</a></li>
+          <li class="nav-item"><a class="nav-link" href="/videogen">{{ _('nav.video') }}</a></li>
+          <li class="nav-item"><a class="nav-link" href="/models">{{ _('nav.models') }}</a></li>
+          <li class="nav-item"><a class="nav-link" href="/tasks">{{ _('nav.tasks') }}</a></li>
+        </ul>
         <ul class="navbar-nav">
-          <li class="nav-item"><a class="nav-link" href="/train">Train</a></li>
-          <li class="nav-item"><a class="nav-link" href="/quantize">Quantize</a></li>
-          <li class="nav-item"><a class="nav-link" href="/eval">Evaluate</a></li>
-          <li class="nav-item"><a class="nav-link" href="/videogen">Video</a></li>
-          <li class="nav-item"><a class="nav-link" href="/models">Models</a></li>
-          <li class="nav-item"><a class="nav-link" href="/tasks">Tasks</a></li>
+          <li class="nav-item">
+            {% if current_lang == 'zh' %}
+            <a class="nav-link" href="/set_lang/en" title="Switch to English">EN</a>
+            {% else %}
+            <a class="nav-link" href="/set_lang/zh" title="切换到中文">中文</a>
+            {% endif %}
+          </li>
         </ul>
       </div>
     </div>
@@ -37,6 +46,19 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    window.I18N = {
+      submitting_task: "{{ _('js.submitting_task') }}",
+      error_prefix: "{{ _('js.error_prefix') }}",
+      task_started: "{{ _('js.task_started') }}",
+      task_status: "{{ _('js.task_status') }}",
+      connecting: "{{ _('js.connecting') }}",
+      badge_pending: "{{ _('tasks.badge_pending') }}",
+      badge_running: "{{ _('tasks.badge_running') }}",
+      badge_completed: "{{ _('tasks.badge_completed') }}",
+      badge_failed: "{{ _('tasks.badge_failed') }}"
+    };
+  </script>
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
   {% block scripts %}{% endblock %}
 </body>

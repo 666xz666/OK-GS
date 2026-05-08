@@ -3,13 +3,14 @@ import sys
 from argparse import Namespace
 from unittest.mock import patch
 
-from flask import Blueprint, render_template, request, jsonify, url_for
+from flask import Blueprint, render_template, request, jsonify, url_for, session
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from ui.config import DATASET_ROOT, MODEL_ROOT
 from ui.forms import scan_models
 from ui.task_manager import TaskManager
+from ui.translations import make_translator
 
 quantize_bp = Blueprint('quantize', __name__)
 
@@ -56,6 +57,7 @@ def start_quantize():
             'vq_ratio': data.get('vq_ratio', '0.6'),
             'codebook_size': data.get('codebook_size', '8192'),
             'iteration_num': data.get('iteration_num', '1000'),
+            'lang': session.get('lang', 'zh'),
         },
         lambda task: _run_quantization(task)
     )
@@ -63,6 +65,8 @@ def start_quantize():
 
 
 def _run_quantization(task):
+    _ = make_translator(task.params.get('lang', 'zh'))
+
     import torch
     torch.cuda.set_device(0)
 
@@ -83,14 +87,13 @@ def _run_quantization(task):
         vq_way='half',
     )
 
-    print(f"Quantizing model: {opt.input_path}")
-    print(f"VQ Ratio: {opt.vq_ratio}, Codebook Size: {opt.codebook_size}, Iterations: {opt.iteration_num}")
-    print(f"Save path: {opt.save_path}")
+    print(_('log.quantizing_model', path=opt.input_path))
+    print(_('log.vq_config', ratio=opt.vq_ratio, codebook=opt.codebook_size, iters=opt.iteration_num))
+    print(_('log.save_path', path=opt.save_path))
 
     q = vq_module.Quantization(opt)
     q.quantize()
 
-    # Replace os.system zip call with Python zipfile
     import zipfile
     save_path = opt.save_path
     zip_path = os.path.join(save_path, 'extreme_saving.zip')
@@ -103,7 +106,7 @@ def _run_quantization(task):
                     arcname = os.path.relpath(abs_fn, save_path)
                     zf.write(abs_fn, arcname)
         size_mb = os.path.getsize(zip_path) / 1024 / 1024
-        print(f"Size = {size_mb:.2f} MB")
+        print(_('log.size_mb', size=size_mb))
 
     q.dequantize()
-    print("Quantization complete.")
+    print(_('log.quantization_complete'))

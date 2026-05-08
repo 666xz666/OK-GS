@@ -8,6 +8,7 @@ if PROJECT_ROOT not in sys.path:
 from flask import Flask
 
 from ui.config import FLASK_HOST, FLASK_PORT, CUDA_DEVICE
+from ui.language import language_bp, init_i18n
 
 
 def create_app():
@@ -15,6 +16,9 @@ def create_app():
 
     app = Flask(__name__, template_folder='templates', static_folder='static')
     app.secret_key = os.environ.get('GS_SECRET_KEY', 'gs-web-ui-dev-key')
+
+    app.register_blueprint(language_bp)
+    init_i18n(app)
 
     from ui.blueprints.main import main_bp
     from ui.blueprints.train import train_bp
@@ -34,8 +38,11 @@ def create_app():
 
     @app.errorhandler(404)
     def not_found(e):
-        from flask import render_template
-        return render_template('base.html', content='<div class="alert alert-warning">Page not found.</div>'), 404
+        from flask import render_template, session
+        from ui.translations import make_translator
+        from ui.language import get_current_lang
+        _ = make_translator(get_current_lang())
+        return render_template('base.html', content=f'<div class="alert alert-warning">{_("misc.page_not_found")}</div>'), 404
 
     return app
 
