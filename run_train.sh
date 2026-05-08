@@ -40,10 +40,10 @@ port=4060
 dset=mipnerf360
 
 scenes=(
-  "bicycle" 
+  "room" 
 )
 
-factors=(4)
+factors=(2)
 ########################
 
 

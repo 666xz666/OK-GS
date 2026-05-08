@@ -11,8 +11,8 @@ do
     # INPUT_PLY_PATH=./vectree/pruned_distilled/${SCENE}/iteration_40000/point_cloud.ply
     # SAVE_PATH=./vectree/output/${SCENE}
 
-    IMP_PATH=/data/project/GS/gaussian-splatting/output/mipnerf360/bicycle
-    INPUT_PLY_PATH=/data/project/GS/gaussian-splatting/output/mipnerf360/bicycle/point_cloud/iteration_30000/point_cloud.ply
+    IMP_PATH=/data/project/GS/gaussian-splatting/output/mipnerf360/${SCENE}
+    INPUT_PLY_PATH=/data/project/GS/gaussian-splatting/output/mipnerf360/${SCENE}/point_cloud/iteration_30000/point_cloud.ply
     SAVE_PATH=${IMP_PATH}
 
     CMD="CUDA_VISIBLE_DEVICES=0 python vectree/vectree.py \
