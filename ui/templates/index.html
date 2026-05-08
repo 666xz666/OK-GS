@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="mb-4">3D Gaussian Splatting — Pipeline Dashboard</h2>
+
+<div class="row mb-4">
+  <div class="col-md-3">
+    <div class="card text-white bg-primary">
+      <div class="card-body">
+        <h5 class="card-title">{{ total_scenes }}</h5>
+        <p class="card-text">Available Datasets</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-white bg-success">
+      <div class="card-body">
+        <h5 class="card-title">{{ models_count }}</h5>
+        <p class="card-text">Trained Models</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-white bg-info">
+      <div class="card-body">
+        <h5 class="card-title">{{ models_with_vq }}</h5>
+        <p class="card-text">VQ Compressed</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-white bg-warning">
+      <div class="card-body">
+        <h5 class="card-title">{{ running_tasks|length }}</h5>
+        <p class="card-text">Running Tasks</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card mb-4">
+      <div class="card-header fw-bold">Pipeline Stages</div>
+      <div class="list-group list-group-flush">
+        <a href="/train" class="list-group-item list-group-item-action d-flex justify-content-between">
+          <span>1. Train</span>
+          <small class="text-muted">Train 3D Gaussian Splatting model</small>
+        </a>
+        <a href="/quantize" class="list-group-item list-group-item-action d-flex justify-content-between">
+          <span>2. Quantize</span>
+          <small class="text-muted">VQ compression of trained model</small>
+        </a>
+        <a href="/eval" class="list-group-item list-group-item-action d-flex justify-content-between">
+          <span>3. Evaluate</span>
+          <small class="text-muted">Compare original vs VQ quality</small>
+        </a>
+        <a href="/videogen" class="list-group-item list-group-item-action d-flex justify-content-between">
+          <span>4. Video</span>
+          <small class="text-muted">Generate flythrough video</small>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card mb-4">
+      <div class="card-header fw-bold">Recent Models <a href="/models" class="btn btn-sm btn-outline-primary float-end">View All</a></div>
+      <div class="card-body p-0">
+        {% if models %}
+        <table class="table table-hover mb-0">
+          <thead><tr><th>Model</th><th>PLY</th><th>VQ</th><th>Results</th></tr></thead>
+          <tbody>
+          {% for m in models[:10] %}
+          <tr>
+            <td><a href="/models/{{ m.rel_path }}">{{ m.rel_path }}</a></td>
+            <td>{% if m.has_ply %}<span class="badge bg-success">✓</span>{% else %}<span class="badge bg-secondary">✗</span>{% endif %}</td>
+            <td>{% if m.has_vq %}<span class="badge bg-success">✓</span>{% else %}<span class="badge bg-secondary">✗</span>{% endif %}</td>
+            <td>{% if m.has_results %}<span class="badge bg-success">✓</span>{% else %}<span class="badge bg-secondary">✗</span>{% endif %}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="p-3 text-muted">No models found under {{ model_root or 'output' }}</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if running_tasks %}
+<div class="card mb-4">
+  <div class="card-header fw-bold">Running Tasks</div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>Task ID</th><th>Type</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>
+      {% for t in running_tasks %}
+      <tr>
+        <td><code>{{ t.id }}</code></td>
+        <td>{{ t.type }}</td>
+        <td><span class="badge bg-primary">Running</span></td>
+        <td><a href="/tasks" class="btn btn-sm btn-outline-secondary">View Log</a></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

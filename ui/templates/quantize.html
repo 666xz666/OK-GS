@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="mb-4">2. Quantization (VQ Compression)</h2>
+
+<div class="row">
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header fw-bold">Quantization Parameters</div>
+      <div class="card-body">
+        <form id="quantize-form" onsubmit="submitTask(event, '/quantize/start')">
+          <div class="mb-3">
+            <label class="form-label">Model</label>
+            <select name="model_path" class="form-select" required>
+              <option value="">-- Select Model --</option>
+              {% for m in models %}
+              <option value="{{ m.rel_path }}">{{ m.rel_path }} ({{ m.iterations|join(', ') if m.iterations else 'N/A' }})</option>
+              {% endfor %}
+            </select>
+            <div class="form-text">Only models with PLY + importance scores shown. Model root: {{ model_root }}</div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">VQ Ratio</label>
+              <input type="range" name="vq_ratio" class="form-range" min="0" max="1" step="0.05" value="0.6" id="vqRatio" oninput="document.getElementById('vqRatioVal').textContent=this.value">
+              <div class="form-text">Quantize fraction: <strong id="vqRatioVal">0.6</strong> (keep top 40% full precision, bottom 60% VQ-quantized)</div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Codebook Size</label>
+              <select name="codebook_size" class="form-select">
+                <option value="1024">1024 (10-bit)</option>
+                <option value="2048">2048 (11-bit)</option>
+                <option value="4096">4096 (12-bit)</option>
+                <option value="8192" selected>8192 (13-bit)</option>
+                <option value="16384">16384 (14-bit)</option>
+              </select>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">VQ Iterations</label>
+              <input type="number" name="iteration_num" class="form-control" value="1000" min="100" step="100">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">SH Degree</label>
+            <input type="number" name="sh_degree" class="form-control" value="3" min="0" max="4" style="max-width:120px">
+          </div>
+
+          <button type="submit" class="btn btn-primary">Start Quantization</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-header fw-bold">Log Output</div>
+      <div class="card-body p-0">
+        <pre id="log-panel" class="log-panel p-3 mb-0" style="height:400px;overflow-y:auto;background:#1e1e1e;color:#d4d4d4;font-size:13px;">Waiting for task submission...</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

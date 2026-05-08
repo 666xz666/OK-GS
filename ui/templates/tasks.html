@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="mb-4">Tasks</h2>
+
+{% if tasks %}
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for t in tasks %}
+      <tr id="task-{{ t.id }}">
+        <td><code>{{ t.id }}</code></td>
+        <td>{{ t.type }}</td>
+        <td>
+          {% if t.status == 'pending' %}<span class="badge bg-secondary">Pending</span>
+          {% elif t.status == 'running' %}<span class="badge bg-primary">Running</span>
+          {% elif t.status == 'completed' %}<span class="badge bg-success">Completed</span>
+          {% elif t.status == 'failed' %}<span class="badge bg-danger">Failed</span>
+          {% endif %}
+        </td>
+        <td><small>—</small></td>
+        <td>
+          <button class="btn btn-sm btn-outline-secondary" onclick="viewLog('{{ t.id }}')" {% if t.status == 'pending' %}disabled{% endif %}>View Log</button>
+          {% if t.status == 'completed' and t.type == 'eval' %}
+          <a href="/models/{{ t.params.model_path }}" class="btn btn-sm btn-outline-primary">View Results</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card mt-4" id="log-card" style="display:none;">
+  <div class="card-header d-flex justify-content-between">
+    <span class="fw-bold">Task Log: <span id="log-task-id"></span></span>
+    <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('log-card').style.display='none'">Close</button>
+  </div>
+  <div class="card-body p-0">
+    <pre id="log-panel" class="p-3 mb-0" style="height:500px;overflow-y:auto;background:#1e1e1e;color:#d4d4d4;font-size:13px;"></pre>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-info">No tasks yet. Start a pipeline stage to see tasks here.</div>
+{% endif %}
+
+{% endblock %}

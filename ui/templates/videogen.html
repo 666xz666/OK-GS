@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="mb-4">4. Video Generation</h2>
+
+<div class="row">
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header fw-bold">Video Parameters</div>
+      <div class="card-body">
+        <form id="videogen-form" onsubmit="submitTask(event, '/videogen/start')">
+          <div class="mb-3">
+            <label class="form-label">Model</label>
+            <select name="model_path" class="form-select" required>
+              <option value="">-- Select Model --</option>
+              {% for m in models %}
+              <option value="{{ m.rel_path }}">{{ m.rel_path }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Iteration</label>
+              <input type="number" name="iteration" class="form-control" value="30000" min="1000">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">FPS</label>
+              <input type="number" name="fps" class="form-control" value="30" min="1" max="120">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Radius (for circular)</label>
+              <input type="number" name="radius" class="form-control" value="5" step="0.5" min="0.5">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="load_vq" value="true" id="loadVq" checked>
+              <label class="form-check-label" for="loadVq">Load VQ-compressed model</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="video" value="true" id="videoType" checked>
+              <label class="form-check-label" for="videoType">Ellipse path video (600 frames)</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="circular" value="true" id="circularType">
+              <label class="form-check-label" for="circularType">Circular path video (240 frames)</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="skip_train" value="true" id="skipTrain" checked>
+              <label class="form-check-label" for="skipTrain">Skip train views</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="skip_test" value="true" id="skipTest" checked>
+              <label class="form-check-label" for="skipTest">Skip test views</label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Generate Video</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-header fw-bold">Log Output</div>
+      <div class="card-body p-0">
+        <pre id="log-panel" class="log-panel p-3 mb-0" style="height:400px;overflow-y:auto;background:#1e1e1e;color:#d4d4d4;font-size:13px;">Waiting for task submission...</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

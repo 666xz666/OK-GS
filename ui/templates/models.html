@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="mb-4">Model Browser</h2>
+
+{% if models %}
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Iterations</th>
+          <th>PLY</th>
+          <th>VQ</th>
+          <th>Importance</th>
+          <th>Results</th>
+          <th>Video</th>
+          <th>Metrics Summary</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for m in models %}
+      <tr>
+        <td><a href="/models/{{ m.rel_path }}"><code>{{ m.rel_path }}</code></a></td>
+        <td>{{ m.iterations|join(', ') }}</td>
+        <td>{% if m.has_ply %}<span class="badge bg-success">✓</span>{% else %}<span class="badge bg-secondary">✗</span>{% endif %}</td>
+        <td>{% if m.has_vq %}<span class="badge bg-success">✓</span>{% else %}<span class="badge bg-secondary">✗</span>{% endif %}</td>
+        <td>{% if m.has_imp %}<span class="badge bg-success">✓</span>{% else %}<span class="badge bg-secondary">✗</span>{% endif %}</td>
+        <td>{% if m.has_results %}<span class="badge bg-success">✓</span>{% else %}<span class="badge bg-secondary">✗</span>{% endif %}</td>
+        <td>{% if m.has_video %}<span class="badge bg-success">✓</span>{% else %}<span class="badge bg-secondary">✗</span>{% endif %}</td>
+        <td>
+          {% if m.comparison %}
+            {% if m.comparison.original and m.comparison.vq %}
+            <small>SSIM: {{ "%.3f"|format(m.comparison.original.SSIM) }} → {{ "%.3f"|format(m.comparison.vq.SSIM) }}<br>
+            PSNR: {{ "%.1f"|format(m.comparison.original.PSNR) }} → {{ "%.1f"|format(m.comparison.vq.PSNR) }}</small>
+            {% endif %}
+          {% elif m.results %}
+            {% for scene, methods in m.results.items() %}
+            <small>
+            {% for method, vals in methods.items() %}
+              {{ method }}: SSIM {{ "%.3f"|format(vals.SSIM) }}<br>
+            {% endfor %}
+            </small>
+            {% endfor %}
+          {% else %}
+            <span class="text-muted">—</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-info">No models found under <code>{{ model_root }}</code>.</div>
+<div class="mt-3"><a href="/train" class="btn btn-primary">Train a Model</a></div>
+{% endif %}
+
+{% endblock %}

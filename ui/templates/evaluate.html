@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="mb-4">3. Evaluation</h2>
+
+<div class="row">
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header fw-bold">Evaluation Parameters</div>
+      <div class="card-body">
+        <form id="eval-form" onsubmit="submitTask(event, '/eval/start')">
+          <div class="mb-3">
+            <label class="form-label">Model</label>
+            <select name="model_path" class="form-select" required>
+              <option value="">-- Select Model --</option>
+              {% for m in models %}
+              <option value="{{ m.rel_path }}">{{ m.rel_path }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Iteration</label>
+              <input type="number" name="iteration" class="form-control" value="30000" min="1000">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="skip_train" value="true" id="skipTrain" checked>
+              <label class="form-check-label" for="skipTrain">Skip training views (test only)</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="compare_vq" value="true" id="compareVq" checked>
+              <label class="form-check-label" for="compareVq">Compare original vs VQ</label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Run Evaluation</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-header fw-bold">Log Output</div>
+      <div class="card-body p-0">
+        <pre id="log-panel" class="log-panel p-3 mb-0" style="height:400px;overflow-y:auto;background:#1e1e1e;color:#d4d4d4;font-size:13px;">Waiting for task submission...</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
