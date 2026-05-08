@@ -7,3 +7,6 @@
 [submodule "submodules/fused-ssim"]
 	path = submodules/fused-ssim
 	url = https://github.com/rahul-goel/fused-ssim.git
+[submodule "submodules/compress-diff-gaussian-rasterization"]
+	path = submodules/compress-diff-gaussian-rasterization
+	url = https://github.com/Kevin-2017/compress-diff-gaussian-rasterization.git
