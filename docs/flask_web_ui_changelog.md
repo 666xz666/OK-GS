@@ -1,5 +1,51 @@
 # Flask Web UI — Changelog
 
+## 2026-05-09
+
+### UI 现代化 — Flask Web UI 0.2.0
+
+视觉风格全面升级，提升界面质感与交互体验。
+
+**修改文件**:
+- `ui/static/css/style.css` — 全面重写 CSS
+  - 引入 CSS 自定义属性设计系统 (--primary, --radius, --shadow 等)
+  - 导航栏：深靛蓝渐变背景 + 渐变文字 Logo
+  - 卡片：12px 圆角、增强阴影、hover 微浮动效果 + 平滑过渡
+  - 按钮：8px 圆角、渐变主色调、hover 缩放
+  - 表格：圆角、大写表头、hover 高亮行
+  - 仪表盘统计卡片：四色渐变（紫/绿/蓝/橙）、图标水印、hover 上浮动画
+  - 全局 fadeInUp 入场动画，卡片按顺序渐次入场
+  - 表单控件：聚焦时紫色光晕、滑块主题色
+- `ui/translations.py` — 中文翻译全部重写
+  - 去掉机翻感，语气更自然亲和
+  - 导航标签更准确（"量化"→"量化压缩"，"评估"→"质量评估"）
+  - 按钮文案更简洁（"开始训练"、"开始压缩"、"开始评估"）
+  - 日志消息更口语化
+- `ui/templates/index.html` — 仪表盘重构
+  - 统计卡片改为渐变彩色卡片 + 图标
+  - 两个主要区域采用更合理宽度分配 (5/7 分栏)
+  - 添加 animate-in 入场动画
+- `ui/templates/model_detail.html` — 模型详情页重构
+  - 修复图表被压缩的问题：从 col-md-4 改为全宽，chart-container 固定最小高度
+  - 画质对比表格与柱状图并排 (5/7 分栏)
+  - 新增「逐视角画质曲线」：替换原有表格，使用 Chart.js 折线图展示 SSIM/PSNR/LPIPS 随视角变化
+  - 渲染样张 hover 放大效果
+  - 视频播放器嵌入存储卡片旁边，利用空余空间
+  - 添加 section-title 左侧色条装饰
+  - Badge 改为 pill 圆角形状
+- `ui/static/js/charts.js` — 新增图表函数
+  - `renderPerViewChart()`: 折线图，SSIM(紫色实线)/PSNR(绿色实线)/LPIPS(粉色虚线)，平滑曲线 + 半透明填充
+  - `renderMetricsBarChart()` / `renderStorageChart()`: 增加圆角柱状图、点状图例
+- `ui/templates/train.html` / `quantize.html` / `evaluate.html` / `videogen.html` / `models.html` / `tasks.html` — 统一使用 page-heading 标题 + animate-in 动画
+
+**设计要点**:
+- 主色调：靛蓝(#4f46e5) + 青色(#0ea5e9) 渐变体系
+- 圆角体系：8px(小) / 12px(标准) / 16px(大)
+- 动画：fadeInUp 0.4s ease-out，卡片按顺序延迟入场
+- 零额外依赖
+
+---
+
 ## 2026-05-08
 
 ### 中英文切换 (i18n) — Flask Web UI 0.1.1

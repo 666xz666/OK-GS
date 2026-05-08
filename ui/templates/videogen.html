@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2 class="mb-4">{{ _('videogen.heading') }}</h2>
+<h2 class="page-heading">{{ _('videogen.heading') }}</h2>
 
 <div class="row">
   <div class="col-md-7">
-    <div class="card">
+    <div class="card animate-in">
       <div class="card-header fw-bold">{{ _('videogen.video_params') }}</div>
       <div class="card-body">
         <form id="videogen-form" onsubmit="submitTask(event, '/videogen/start')">
@@ -64,7 +64,7 @@
   </div>
 
   <div class="col-md-5">
-    <div class="card">
+    <div class="card animate-in">
       <div class="card-header fw-bold">{{ _('videogen.log_output') }}</div>
       <div class="card-body p-0">
         <pre id="log-panel" class="log-panel p-3 mb-0" style="height:400px;overflow-y:auto;background:#1e1e1e;color:#d4d4d4;font-size:13px;">{{ _('videogen.waiting_for_task') }}</pre>

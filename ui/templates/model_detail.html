@@ -1,64 +1,108 @@
 {% extends "base.html" %}
 {% block head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
 {% endblock %}
 {% block content %}
 
-<h2 class="mb-3">Model: <code>{{ info.rel_path }}</code></h2>
-<p class="text-muted">{{ info.abs_path }}</p>
+<h2 class="page-heading">Model <code>{{ info.rel_path }}</code></h2>
+<p class="text-muted small mb-3">{{ info.abs_path }}</p>
 
 <div class="row mb-3">
   <div class="col">
-    {% if has_ply %}<span class="badge bg-success fs-6 me-2">{{ _('model_detail.ply_badge') }} ✓</span>{% else %}<span class="badge bg-secondary fs-6 me-2">{{ _('model_detail.ply_badge') }} ✗</span>{% endif %}
-    {% if has_vq %}<span class="badge bg-success fs-6 me-2">{{ _('model_detail.vq_badge') }} ✓</span>{% else %}<span class="badge bg-secondary fs-6 me-2">{{ _('model_detail.vq_badge') }} ✗</span>{% endif %}
-    {% if has_video %}<span class="badge bg-success fs-6 me-2">{{ _('model_detail.video_badge') }} ✓</span>{% endif %}
+    {% if has_ply %}<span class="badge bg-success fs-6 me-2">{{ _('model_detail.ply_badge') }} &check;</span>{% else %}<span class="badge bg-secondary fs-6 me-2">{{ _('model_detail.ply_badge') }} &cross;</span>{% endif %}
+    {% if has_vq %}<span class="badge bg-success fs-6 me-2">{{ _('model_detail.vq_badge') }} &check;</span>{% else %}<span class="badge bg-secondary fs-6 me-2">{{ _('model_detail.vq_badge') }} &cross;</span>{% endif %}
+    {% if has_video %}<span class="badge bg-success fs-6 me-2">{{ _('model_detail.video_badge') }} &check;</span>{% endif %}
   </div>
 </div>
 
-{% if comparison %}
+{% if comparison and comparison.original and comparison.vq %}
+{# === Metrics Comparison + Charts (full-width, side-by-side) === #}
 <div class="row mb-4">
-  <div class="col-md-8">
-    <div class="card">
+  <div class="col-lg-5">
+    <div class="card animate-in h-100">
       <div class="card-header fw-bold">{{ _('model_detail.metrics_comparison') }}</div>
       <div class="card-body">
-        <table class="table table-sm">
+        <table class="table table-sm mb-0">
           <thead><tr><th>{{ _('model_detail.metric_col') }}</th><th>{{ _('model_detail.original_col') }}</th><th>{{ _('model_detail.vq_col') }}</th><th>{{ _('model_detail.delta_col') }}</th></tr></thead>
           <tbody>
-            {% if comparison.original and comparison.vq %}
-            <tr><td>SSIM</td><td>{{ "%.4f" % comparison.original.SSIM }}</td><td>{{ "%.4f" % comparison.vq.SSIM }}</td><td class="{% if comparison.delta.SSIM < 0 %}text-danger{% else %}text-success{% endif %}">{{ "%+.4f" % comparison.delta.SSIM }}</td></tr>
-            <tr><td>PSNR</td><td>{{ "%.2f" % comparison.original.PSNR }}</td><td>{{ "%.2f" % comparison.vq.PSNR }}</td><td class="{% if comparison.delta.PSNR < 0 %}text-danger{% else %}text-success{% endif %}">{{ "%+.2f" % comparison.delta.PSNR }}</td></tr>
-            <tr><td>LPIPS</td><td>{{ "%.4f" % comparison.original.LPIPS }}</td><td>{{ "%.4f" % comparison.vq.LPIPS }}</td><td class="{% if comparison.delta.LPIPS > 0 %}text-danger{% else %}text-success{% endif %}">{{ "%+.4f" % comparison.delta.LPIPS }}</td></tr>
-            {% endif %}
+            <tr>
+              <td class="fw-bold">SSIM</td>
+              <td>{{ "%.4f" % comparison.original.SSIM }}</td>
+              <td>{{ "%.4f" % comparison.vq.SSIM }}</td>
+              <td class="{% if comparison.delta.SSIM < 0 %}metric-change-negative{% else %}metric-change-positive{% endif %}">{{ "%+.4f" % comparison.delta.SSIM }}</td>
+            </tr>
+            <tr>
+              <td class="fw-bold">PSNR</td>
+              <td>{{ "%.2f" % comparison.original.PSNR }}</td>
+              <td>{{ "%.2f" % comparison.vq.PSNR }}</td>
+              <td class="{% if comparison.delta.PSNR < 0 %}metric-change-negative{% else %}metric-change-positive{% endif %}">{{ "%+.2f" % comparison.delta.PSNR }}</td>
+            </tr>
+            <tr>
+              <td class="fw-bold">LPIPS</td>
+              <td>{{ "%.4f" % comparison.original.LPIPS }}</td>
+              <td>{{ "%.4f" % comparison.vq.LPIPS }}</td>
+              <td class="{% if comparison.delta.LPIPS > 0 %}metric-change-negative{% else %}metric-change-positive{% endif %}">{{ "%+.4f" % comparison.delta.LPIPS }}</td>
+            </tr>
             {% if comparison.mem %}
-            <tr><td>{{ _('model_detail.storage') }}</td><td>{{ comparison.mem.original_mb }} MB</td><td>{{ comparison.mem.vq_mb }} MB</td><td class="text-success">{{ comparison.mem.compression_ratio }}%</td></tr>
+            <tr>
+              <td class="fw-bold">{{ _('model_detail.storage') }}</td>
+              <td>{{ comparison.mem.original_mb }} MB</td>
+              <td>{{ comparison.mem.vq_mb }} MB</td>
+              <td class="metric-change-positive">{{ comparison.mem.compression_ratio }}%</td>
+            </tr>
             {% endif %}
           </tbody>
         </table>
       </div>
     </div>
   </div>
-  <div class="col-md-4">
-    <div class="card">
+  <div class="col-lg-7">
+    <div class="card animate-in h-100">
       <div class="card-header fw-bold">{{ _('model_detail.charts') }}</div>
       <div class="card-body">
-        <canvas id="metricsChart" height="200"></canvas>
+        <div class="chart-container" style="height:280px;">
+          <canvas id="metricsChart"></canvas>
+        </div>
       </div>
     </div>
-    {% if comparison.mem %}
-    <div class="card mt-3">
-      <div class="card-header fw-bold">{{ _('model_detail.storage') }}</div>
-      <div class="card-body">
-        <canvas id="storageChart" height="100"></canvas>
-      </div>
-    </div>
-    {% endif %}
   </div>
 </div>
+
+{% if comparison.mem %}
+<div class="row mb-4">
+  <div class="col-lg-6">
+    <div class="card animate-in">
+      <div class="card-header fw-bold">{{ _('model_detail.storage') }}</div>
+      <div class="card-body">
+        <div class="chart-container" style="height:140px;">
+          <canvas id="storageChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card animate-in">
+      <div class="card-header fw-bold">{{ _('model_detail.video') }}</div>
+      <div class="card-body p-2">
+        {% if has_video %}
+        <video controls style="width:100%;max-height:320px;border-radius:8px;">
+          <source src="/models/{{ model_rel_path }}/{{ video_rel_dir }}/{{ video_mp4 }}" type="video/mp4">
+        </video>
+        {% else %}
+        <p class="text-muted text-center my-4">暂无视频，前往<a href="/videogen">视频生成</a>创建</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 {% elif results %}
-<div class="card mb-4">
+<div class="card mb-4 animate-in">
   <div class="card-header fw-bold">{{ _('model_detail.results') }}</div>
-  <div class="card-body">
-    <table class="table table-sm">
+  <div class="card-body p-0">
+    <table class="table table-sm mb-0">
       <thead><tr><th>{{ _('model_detail.method_col') }}</th><th>{{ _('model_detail.ssim_col') }}</th><th>{{ _('model_detail.psnr_col') }}</th><th>{{ _('model_detail.lpips_col') }}</th></tr></thead>
       <tbody>
       {% for scene, methods in results.items() %}
@@ -72,60 +116,58 @@
 </div>
 {% endif %}
 
+{# === Per-View Metrics Chart === #}
 {% if per_view %}
-<div class="card mb-4">
-  <div class="card-header fw-bold">{{ _('model_detail.per_view_metrics') }} <span class="text-muted">{{ _('model_detail.first_20_views') }}</span></div>
-  <div class="card-body p-0" style="max-height:400px;overflow-y:auto;">
-    <table class="table table-sm table-striped mb-0">
-      <thead><tr><th>{{ _('model_detail.view_col') }}</th><th>{{ _('model_detail.ssim_col') }}</th><th>{{ _('model_detail.psnr_col') }}</th><th>{{ _('model_detail.lpips_col') }}</th></tr></thead>
-      <tbody>
-      {% for row in per_view %}
-          <tr><td>{{ row.method }}/{{ row.image }}</td><td>{{ "%.4f" % row.SSIM }}</td><td>{{ "%.2f" % row.PSNR }}</td><td>{{ "%.4f" % row.LPIPS }}</td></tr>
-      {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
-{% endif %}
-
-{% if render_samples %}
-<div class="card mb-4">
-  <div class="card-header fw-bold">{{ _('model_detail.sample_renders') }}</div>
-  <div class="card-body">
-    {% for sample in render_samples %}
-    <h6>{{ sample.method }}</h6>
-    <div class="d-flex flex-wrap gap-2 mb-3">
-      {% for img in sample.images %}
-      <img src="/models/{{ model_rel_path }}/test/{{ sample.method }}/renders/{{ img }}"
-           style="max-width:150px;max-height:150px;" class="border rounded" alt="{{ img }}">
-      {% endfor %}
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card animate-in">
+      <div class="card-header fw-bold">{{ _('model_detail.per_view_metrics') }}</div>
+      <div class="card-body">
+        <div class="chart-container" style="height:320px;">
+          <canvas id="perViewChart"></canvas>
+        </div>
+      </div>
     </div>
-    {% endfor %}
   </div>
 </div>
 {% endif %}
 
+{# === Sample Renders === #}
+{% if render_samples %}
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card animate-in">
+      <div class="card-header fw-bold">{{ _('model_detail.sample_renders') }}</div>
+      <div class="card-body">
+        {% for sample in render_samples %}
+        <h6 class="text-muted small mt-2 mb-2">{{ sample.method }}</h6>
+        <div class="d-flex flex-wrap gap-2">
+          {% for img in sample.images %}
+          <img src="/models/{{ model_rel_path }}/test/{{ sample.method }}/renders/{{ img }}"
+               class="render-thumb border" style="max-width:130px;max-height:130px;" alt="{{ img }}" loading="lazy">
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{# === Test Log === #}
 {% if test_log %}
-<div class="card mb-4">
-  <div class="card-header fw-bold">{{ _('model_detail.test_log') }} <button class="btn btn-sm btn-outline-secondary float-end" onclick="this.nextElementSibling.classList.toggle('d-none')">{{ _('model_detail.show_hide') }}</button></div>
-  <pre class="card-body d-none mb-0" style="max-height:300px;overflow-y:auto;background:#1e1e1e;color:#d4d4d4;font-size:12px;">{{ test_log }}</pre>
-</div>
-{% endif %}
-
-{% if has_video %}
-<div class="card mb-4">
-  <div class="card-header fw-bold">{{ _('model_detail.video') }}</div>
-  <div class="card-body">
-    <video controls style="max-width:100%">
-      <source src="/models/{{ model_rel_path }}/{{ video_rel_dir }}/{{ video_mp4 }}" type="video/mp4">
-    </video>
+<div class="card mb-4 animate-in">
+  <div class="card-header fw-bold">
+    {{ _('model_detail.test_log') }}
+    <button class="btn btn-sm btn-outline-secondary float-end" onclick="var p=this.closest('.card').querySelector('pre');p.classList.toggle('d-none');this.textContent=p.classList.contains('d-none')?'{{ _('model_detail.show_hide') }}':'{{ _('model_detail.show_hide') }}'">{{ _('model_detail.show_hide') }}</button>
   </div>
+  <pre class="card-body d-none mb-0" style="max-height:300px;overflow-y:auto;font-size:12px;">{{ test_log }}</pre>
 </div>
 {% endif %}
 
-<div class="mt-3">
-  <a href="/eval" class="btn btn-outline-primary">{{ _('model_detail.run_eval') }}</a>
-  <a href="/videogen" class="btn btn-outline-info">{{ _('model_detail.generate_video') }}</a>
+<div class="mt-3 mb-5">
+  <a href="/eval" class="btn btn-outline-primary me-2">{{ _('model_detail.run_eval') }}</a>
+  <a href="/videogen" class="btn btn-outline-info me-2">{{ _('model_detail.generate_video') }}</a>
   <a href="/models" class="btn btn-outline-secondary">{{ _('model_detail.back_to_models') }}</a>
 </div>
 {% endblock %}
@@ -134,38 +176,29 @@
 {% if comparison and comparison.original and comparison.vq %}
 <script>
 (function(){
-  var ctx = document.getElementById('metricsChart');
-  if (!ctx) return;
-  new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: ['SSIM', 'PSNR', 'LPIPS'],
-      datasets: [
-        { label: "{{ _('model_detail.original_col') }}", data: [{{ comparison.original.SSIM }}, {{ comparison.original.PSNR }}, {{ comparison.original.LPIPS }}], backgroundColor: '#0d6efd' },
-        { label: "{{ _('model_detail.vq_col') }}", data: [{{ comparison.vq.SSIM }}, {{ comparison.vq.PSNR }}, {{ comparison.vq.LPIPS }}], backgroundColor: '#dc3545' }
-      ]
-    },
-    options: { responsive: true, scales: { y: { beginAtZero: false } } }
-  });
+  renderMetricsBarChart('metricsChart',
+    { SSIM: {{ comparison.original.SSIM }}, PSNR: {{ comparison.original.PSNR }}, LPIPS: {{ comparison.original.LPIPS }} },
+    { SSIM: {{ comparison.vq.SSIM }}, PSNR: {{ comparison.vq.PSNR }}, LPIPS: {{ comparison.vq.LPIPS }} },
+    { ssim: 'SSIM', psnr: 'PSNR', lpips: 'LPIPS', original: "{{ _('model_detail.original_col') }}", vq: "{{ _('model_detail.vq_col') }}" }
+  );
 })();
 </script>
 {% endif %}
 {% if comparison and comparison.mem %}
 <script>
 (function(){
-  var ctx = document.getElementById('storageChart');
-  if (!ctx) return;
-  new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: ["{{ _('model_detail.storage') }} (MB)"],
-      datasets: [
-        { label: 'Original PLY', data: [{{ comparison.mem.original_mb }}], backgroundColor: '#0d6efd' },
-        { label: 'VQ Zip', data: [{{ comparison.mem.vq_mb }}], backgroundColor: '#198754' }
-      ]
-    },
-    options: { indexAxis: 'y', responsive: true, scales: { x: { beginAtZero: true } } }
-  });
+  renderStorageChart('storageChart', {{ comparison.mem.original_mb }}, {{ comparison.mem.vq_mb }},
+    { storage: '{{ _('model_detail.storage') }} (MB)', original: '{{ _('model_detail.original_col') }} PLY', vq: '{{ _('model_detail.vq_col') }} Zip' }
+  );
+})();
+</script>
+{% endif %}
+{% if per_view %}
+<script>
+(function(){
+  renderPerViewChart('perViewChart', {{ per_view | tojson }},
+    { ssim: 'SSIM', psnr: 'PSNR', lpips: 'LPIPS' }
+  );
 })();
 </script>
 {% endif %}
