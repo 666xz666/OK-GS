@@ -94,12 +94,16 @@ def model_detail(model_rel_path):
     has_vq = os.path.isfile(os.path.join(abs_path, 'extreme_saving.zip'))
     has_video = False
     video_mp4 = None
-    video_dir = os.path.join(abs_path, 'video')
-    if os.path.isdir(video_dir):
-        mp4s = [f for f in os.listdir(video_dir) if f.endswith('.mp4')]
-        if mp4s:
-            has_video = True
-            video_mp4 = mp4s[0]
+    video_rel_dir = None
+    for sub in ['video', 'circular']:
+        d = os.path.join(abs_path, sub)
+        if os.path.isdir(d):
+            mp4s = [f for f in os.listdir(d) if f.endswith('.mp4')]
+            if mp4s:
+                has_video = True
+                video_mp4 = mp4s[0]
+                video_rel_dir = sub
+                break
 
     render_samples = []
     for method_dir_name in ['ours_30000_original', 'ours_30000_vq', 'ours_30000']:
@@ -124,8 +128,21 @@ def model_detail(model_rel_path):
                            has_vq=has_vq,
                            has_video=has_video,
                            video_mp4=video_mp4,
+                           video_rel_dir=video_rel_dir,
                            render_samples=render_samples,
                            model_rel_path=model_rel_path)
+
+
+@models_bp.route('/<path:model_rel_path>/video/<filename>')
+def serve_video(model_rel_path, filename):
+    directory = os.path.join(MODEL_ROOT, model_rel_path, 'video')
+    return send_from_directory(directory, filename)
+
+
+@models_bp.route('/<path:model_rel_path>/circular/<filename>')
+def serve_circular_video(model_rel_path, filename):
+    directory = os.path.join(MODEL_ROOT, model_rel_path, 'circular')
+    return send_from_directory(directory, filename)
 
 
 @models_bp.route('/<path:model_rel_path>/test/<method>/renders/<filename>')

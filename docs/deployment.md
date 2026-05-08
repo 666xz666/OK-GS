@@ -3,7 +3,7 @@
 ## 项目文件树
 
 ```
-gaussian-splatting/                          # 项目根目录 (/data/project/GS/gaussian-splatting)
+gaussian-splatting/                          # 项目根目录 (/data/project/OK-GS)
 │
 ├── docs/                                    # 文档
 │   ├── project_overview.md                  #   项目概述（流水线、模块、参数表）
@@ -56,6 +56,7 @@ gaussian-splatting/                          # 项目根目录 (/data/project/GS
 │
 ├── submodules/                              # CUDA 扩展子模块（需编译）
 │   ├── diff-gaussian-rasterization/         #   可微 CUDA 光栅化器
+│   ├── compress-diff-gaussian-rasterization/ #   压缩后可微 CUDA 光栅化器 (含 f_count 模式)
 │   ├── simple-knn/                          #   CUDA KNN
 │   └── fused-ssim/                          #   CUDA SSIM
 │
@@ -108,12 +109,12 @@ gaussian-splatting/                          # 项目根目录 (/data/project/GS
 ├── run_eval.sh                              # 评估对比 shell 脚本
 ├── run_videogen.sh                          # 视频生成 shell 脚本
 │
+├── README.md                                # 项目 README
 ├── requirements.txt                         # pip 依赖（含 Flask Web UI 依赖段落）
 ├── environment.yml                          # conda 环境声明（参考）
 ├── .gitignore
 ├── .gitmodules
 ├── LICENSE.md
-├── README.md
 ├── results.md
 │
 ├── output/                                  # 模型输出根目录（.gitignore）
@@ -140,7 +141,7 @@ gaussian-splatting/                          # 项目根目录 (/data/project/GS
 ### 1. 获取代码
 
 ```bash
-cd /data/project/GS/gaussian-splatting
+cd /data/project/OK-GS
 git submodule update --init --recursive   # 拉取 CUDA 扩展子模块
 ```
 
@@ -152,6 +153,7 @@ conda activate gs2
 
 # 编译 CUDA 扩展（如果尚未编译）
 pip install submodules/diff-gaussian-rasterization
+pip install submodules/compress-diff-gaussian-rasterization
 pip install submodules/simple-knn
 pip install submodules/fused-ssim
 ```
