@@ -173,10 +173,15 @@ translations = {
         "js.task_started": "任务 {id} 已启动\n",
         "js.task_status": "\n--- 任务 {status} ---\n",
         "js.connecting": "连接中...",
+        "js.active_task_blocked": "当前已有任务在执行，请等待完成后再提交新任务。",
 
         # --- Misc ---
         "misc.page_not_found": "页面未找到",
         "misc.error": "错误",
+        "task.active_blocked": "当前已有任务在执行，请等待完成后再提交新任务。",
+        "quantize.already_exists": "该模型已经完成量化压缩，不能重复提交压缩任务。",
+        "eval.already_exists": "该模型已经完成评估，不能重复提交评估任务。",
+        "videogen.already_exists": "该模型已经生成过视频，不能重复提交视频任务。",
 
         # --- Python log messages ---
         "log.optimizing": "正在优化：{path}",
@@ -377,10 +382,15 @@ translations = {
         "js.task_started": "Task {id} started.\n",
         "js.task_status": "\n--- Task {status} ---\n",
         "js.connecting": "Connecting...",
+        "js.active_task_blocked": "Another task is already running. Please wait until it finishes.",
 
         # --- Misc ---
         "misc.page_not_found": "Page not found.",
         "misc.error": "ERROR",
+        "task.active_blocked": "Another task is already running. Please wait until it finishes.",
+        "quantize.already_exists": "This model has already been quantized. Re-submitting quantization is disabled.",
+        "eval.already_exists": "This model has already been evaluated. Re-submitting evaluation is disabled.",
+        "videogen.already_exists": "This model already has generated video output. Re-submitting video generation is disabled.",
 
         # --- Python log messages ---
         "log.optimizing": "Optimizing {path}",

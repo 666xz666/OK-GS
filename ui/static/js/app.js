@@ -1,10 +1,86 @@
 var I = window.I18N || {};
+var APP_STATE = window.APP_STATE || { hasActiveTask: false };
+
+function getTaskFormBlockReason(form) {
+  if (!form) return '';
+  if (APP_STATE.hasActiveTask) {
+    return I.active_task_blocked || 'Another task is already running.';
+  }
+
+  var selectName = form.getAttribute('data-model-select');
+  var completionAttr = form.getAttribute('data-completion-attr');
+  if (!selectName || !completionAttr) {
+    return '';
+  }
+
+  var select = form.querySelector('[name="' + selectName + '"]');
+  if (!select || select.selectedIndex < 0) {
+    return '';
+  }
+
+  var option = select.options[select.selectedIndex];
+  if (option && option.value && option.getAttribute(completionAttr) === 'true') {
+    return form.getAttribute('data-completed-message') || (I.error_prefix || 'ERROR');
+  }
+
+  return '';
+}
+
+function updateTaskFormState(form) {
+  if (!form) return;
+  var submitButton = form.querySelector('.task-submit-btn') || form.querySelector('button[type="submit"]');
+  var note = form.querySelector('.task-submit-note');
+  var blockReason = getTaskFormBlockReason(form);
+
+  if (submitButton) {
+    submitButton.disabled = !!blockReason;
+  }
+  if (note) {
+    note.textContent = blockReason;
+  }
+}
+
+function updateAllTaskFormStates() {
+  document.querySelectorAll('form[data-task-form="true"]').forEach(function(form) {
+    updateTaskFormState(form);
+  });
+}
+
+function initTaskForms() {
+  document.querySelectorAll('form[data-task-form="true"]').forEach(function(form) {
+    if (form.dataset.taskFormBound === 'true') {
+      updateTaskFormState(form);
+      return;
+    }
+
+    var selectName = form.getAttribute('data-model-select');
+    if (selectName) {
+      var select = form.querySelector('[name="' + selectName + '"]');
+      if (select) {
+        select.addEventListener('change', function() {
+          updateTaskFormState(form);
+        });
+      }
+    }
+
+    form.dataset.taskFormBound = 'true';
+    updateTaskFormState(form);
+  });
+}
 
 function submitTask(event, endpoint) {
   event.preventDefault();
   var form = event.target;
+  var blockReason = getTaskFormBlockReason(form);
   var data = new FormData(form);
   var logPanel = document.getElementById('log-panel');
+  if (blockReason) {
+    if (logPanel) {
+      logPanel.textContent = blockReason;
+    }
+    updateTaskFormState(form);
+    return;
+  }
   if (logPanel) {
     logPanel.textContent = I.submitting_task || 'Submitting task...';
   }
@@ -20,6 +96,8 @@ function submitTask(event, endpoint) {
       }
       var started = I.task_started || 'Task {id} started.\n';
       if (logPanel) logPanel.textContent = started.replace('{id}', resp.task_id);
+      APP_STATE.hasActiveTask = true;
+      updateAllTaskFormStates();
       if (resp.redirect) {
         var taskId = resp.task_id;
         connectSSE(taskId, logPanel);
@@ -28,6 +106,16 @@ function submitTask(event, endpoint) {
     .catch(function(err) {
       if (logPanel) logPanel.textContent = (I.error_prefix || 'ERROR: ') + err;
     });
+}
+
+function pollActiveTaskState() {
+  fetch('/tasks/summary')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      APP_STATE.hasActiveTask = !!data.has_active_task;
+      updateAllTaskFormStates();
+    })
+    .catch(function() {});
 }
 
 function connectSSE(taskId, logPanel) {
@@ -39,6 +127,8 @@ function connectSSE(taskId, logPanel) {
       var status = msg.replace('__STATUS__:', '');
       var statusMsg = I.task_status || '\n--- Task {status} ---\n';
       logPanel.textContent += statusMsg.replace('{status}', status);
+      APP_STATE.hasActiveTask = false;
+      updateAllTaskFormStates();
       es.close();
     } else if (msg.startsWith('__ERROR__:')) {
       logPanel.textContent += '\n' + (I.error_prefix || 'ERROR: ') + msg.replace('__ERROR__:', '') + '\n';
@@ -90,4 +180,7 @@ function pollTaskStatus() {
   });
 }
 
-setInterval(pollTaskStatus, 5000);
+setInterval(function() {
+  pollTaskStatus();
+  pollActiveTaskState();
+}, 5000);

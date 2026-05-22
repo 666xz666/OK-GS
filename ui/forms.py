@@ -5,6 +5,15 @@ from argparse import ArgumentParser, Namespace
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
+def has_model_video(model_path):
+    for subdir in ('video', 'circular'):
+        video_dir = os.path.join(model_path, subdir)
+        if os.path.isdir(video_dir):
+            if any(name.endswith('.mp4') for name in os.listdir(video_dir)):
+                return True
+    return False
+
+
 def scan_datasets(dataset_root):
     entries = []
     if not os.path.isdir(dataset_root):
@@ -59,10 +68,7 @@ def scan_models(model_root):
         has_imp = os.path.isfile(os.path.join(dirpath, 'imp_score.npz'))
         has_results = os.path.isfile(os.path.join(dirpath, 'results.json'))
         has_comparison = os.path.isfile(os.path.join(dirpath, 'comparison_vq.json'))
-        has_video = False
-        video_dir = os.path.join(dirpath, 'video')
-        if os.path.isdir(video_dir):
-            has_video = any(f.endswith('.mp4') for f in os.listdir(video_dir))
+        has_video = has_model_video(dirpath)
 
         models.append({
             'rel_path': rel_path,

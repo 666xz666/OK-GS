@@ -8,13 +8,13 @@
     <div class="card animate-in">
       <div class="card-header fw-bold">{{ _('quantize.quantize_params') }}</div>
       <div class="card-body">
-        <form id="quantize-form" onsubmit="submitTask(event, '/quantize/start')">
+        <form id="quantize-form" data-task-form="true" data-model-select="model_path" data-completion-attr="data-has-vq" data-completed-message="{{ _('quantize.already_exists') }}" onsubmit="submitTask(event, '/quantize/start')">
           <div class="mb-3">
             <label class="form-label">{{ _('quantize.model') }}</label>
             <select name="model_path" class="form-select" required>
               <option value="">{{ _('quantize.select_model') }}</option>
               {% for m in models %}
-              <option value="{{ m.rel_path }}">{{ m.rel_path }} ({{ m.iterations|join(', ') if m.iterations else 'N/A' }})</option>
+              <option value="{{ m.rel_path }}" data-has-vq="{{ 'true' if m.has_vq else 'false' }}">{{ m.rel_path }} ({{ m.iterations|join(', ') if m.iterations else 'N/A' }})</option>
               {% endfor %}
             </select>
             <div class="form-text">{{ _('quantize.model_help', root=model_root) }}</div>
@@ -47,7 +47,8 @@
             <input type="number" name="sh_degree" class="form-control" value="3" min="0" max="4" style="max-width:120px">
           </div>
 
-          <button type="submit" class="btn btn-primary">{{ _('quantize.start_quantize') }}</button>
+          <button type="submit" class="btn btn-primary task-submit-btn" {% if has_active_task %}disabled{% endif %}>{{ _('quantize.start_quantize') }}</button>
+          <div class="form-text text-warning mt-2 task-submit-note">{% if has_active_task %}{{ _('task.active_blocked') }}{% endif %}</div>
         </form>
       </div>
     </div>
@@ -73,5 +74,8 @@ function updateRatioHelp(val) {
   var suffixFmt = "{{ _('quantize.ratio_help_suffix', keep='{keep}', vq='{vq}') }}";
   document.getElementById('vqRatioSuffix').textContent = suffixFmt.replace('{keep}', keep).replace('{vq}', vq);
 }
+</script>
+<script>
+initTaskForms();
 </script>
 {% endblock %}

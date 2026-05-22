@@ -8,13 +8,13 @@
     <div class="card animate-in">
       <div class="card-header fw-bold">{{ _('eval.eval_params') }}</div>
       <div class="card-body">
-        <form id="eval-form" onsubmit="submitTask(event, '/eval/start')">
+        <form id="eval-form" data-task-form="true" data-model-select="model_path" data-completion-attr="data-has-results" data-completed-message="{{ _('eval.already_exists') }}" onsubmit="submitTask(event, '/eval/start')">
           <div class="mb-3">
             <label class="form-label">{{ _('eval.model') }}</label>
             <select name="model_path" class="form-select" required>
               <option value="">{{ _('eval.select_model') }}</option>
               {% for m in models %}
-              <option value="{{ m.rel_path }}">{{ m.rel_path }}</option>
+              <option value="{{ m.rel_path }}" data-has-results="{{ 'true' if m.has_results else 'false' }}">{{ m.rel_path }}</option>
               {% endfor %}
             </select>
           </div>
@@ -37,7 +37,8 @@
             </div>
           </div>
 
-          <button type="submit" class="btn btn-primary">{{ _('eval.run_eval') }}</button>
+          <button type="submit" class="btn btn-primary task-submit-btn" {% if has_active_task %}disabled{% endif %}>{{ _('eval.run_eval') }}</button>
+          <div class="form-text text-warning mt-2 task-submit-note">{% if has_active_task %}{{ _('task.active_blocked') }}{% endif %}</div>
         </form>
       </div>
     </div>
@@ -53,4 +54,9 @@
   </div>
 </div>
 
+{% endblock %}
+{% block scripts %}
+<script>
+initTaskForms();
+</script>
 {% endblock %}

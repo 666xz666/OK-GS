@@ -9,6 +9,7 @@ from flask import Flask
 
 from ui.config import FLASK_HOST, FLASK_PORT, CUDA_DEVICE
 from ui.language import language_bp, init_i18n
+from ui.task_manager import TaskManager
 
 
 def create_app():
@@ -35,6 +36,14 @@ def create_app():
     app.register_blueprint(videogen_bp, url_prefix='/videogen')
     app.register_blueprint(models_bp, url_prefix='/models')
     app.register_blueprint(tasks_bp, url_prefix='/tasks')
+
+    @app.context_processor
+    def inject_task_state():
+        active_task = TaskManager.instance().get_active_task()
+        return {
+            'has_active_task': active_task is not None,
+            'active_task': active_task,
+        }
 
     @app.errorhandler(404)
     def not_found(e):

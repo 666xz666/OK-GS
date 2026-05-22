@@ -8,6 +8,12 @@ from io import StringIO
 from ui.translations import make_translator
 
 
+class TaskConflictError(RuntimeError):
+    def __init__(self, active_task):
+        super().__init__('Another task is already active')
+        self.active_task = active_task
+
+
 class StreamCapture:
     def __init__(self, log_queue, orig_stream):
         self._queue = log_queue
@@ -62,10 +68,14 @@ class TaskManager:
         return cls._instance
 
     def start_task(self, task_type, params, run_fn):
-        task_id = str(uuid.uuid4())[:8]
-        log_queue = queue.Queue()
-        task = TaskInfo(task_id, task_type, params, log_queue)
         with self._lock:
+            active_task = self._find_active_task_locked()
+            if active_task is not None:
+                raise TaskConflictError(active_task)
+
+            task_id = str(uuid.uuid4())[:8]
+            log_queue = queue.Queue()
+            task = TaskInfo(task_id, task_type, params, log_queue)
             self.tasks[task_id] = task
 
         thread = threading.Thread(
@@ -83,6 +93,22 @@ class TaskManager:
     def list_tasks(self):
         with self._lock:
             return list(self.tasks.values())
+
+    def get_active_task(self):
+        with self._lock:
+            return self._find_active_task_locked()
+
+    def has_active_task(self):
+        return self.get_active_task() is not None
+
+    def _find_active_task_locked(self):
+        active_tasks = [
+            task for task in self.tasks.values()
+            if task.status in ('pending', 'running')
+        ]
+        if not active_tasks:
+            return None
+        return min(active_tasks, key=lambda task: task.created_at)
 
     def _run_task(self, task, run_fn):
         task.status = 'running'

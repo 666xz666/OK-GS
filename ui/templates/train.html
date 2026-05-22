@@ -8,7 +8,7 @@
     <div class="card animate-in">
       <div class="card-header fw-bold">{{ _('train.train_params') }}</div>
       <div class="card-body">
-        <form id="train-form" onsubmit="submitTask(event, '/train/start')">
+        <form id="train-form" data-task-form="true" onsubmit="submitTask(event, '/train/start')">
           <div class="mb-3">
             <label class="form-label">{{ _('train.dataset') }}</label>
             <select name="source_path" class="form-select" required>
@@ -63,8 +63,9 @@
             </div>
           </div>
 
-          <button type="submit" class="btn btn-primary">{{ _('train.start_training') }}</button>
+          <button type="submit" class="btn btn-primary task-submit-btn" {% if has_active_task %}disabled{% endif %}>{{ _('train.start_training') }}</button>
           <a href="/models" class="btn btn-outline-secondary">{{ _('train.browse_existing') }}</a>
+          <div class="form-text text-warning mt-2 task-submit-note">{% if has_active_task %}{{ _('task.active_blocked') }}{% endif %}</div>
         </form>
       </div>
     </div>
@@ -80,4 +81,9 @@
   </div>
 </div>
 
+{% endblock %}
+{% block scripts %}
+<script>
+initTaskForms();
+</script>
 {% endblock %}

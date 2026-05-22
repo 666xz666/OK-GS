@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from ui.config import DATASET_ROOT, MODEL_ROOT
 from ui.forms import scan_models
-from ui.task_manager import TaskManager
+from ui.task_manager import TaskManager, TaskConflictError
 from ui.translations import make_translator
 
 eval_bp = Blueprint('eval', __name__)
@@ -26,11 +26,14 @@ def eval_form():
 
 @eval_bp.route('/start', methods=['POST'])
 def start_eval():
+    _ = make_translator(session.get('lang', 'zh'))
     data = request.form
     model_rel = data.get('model_path', '')
     model_abs = os.path.join(MODEL_ROOT, model_rel)
     if not model_rel or not os.path.isdir(model_abs):
         return jsonify({'error': 'Invalid model path'}), 400
+    if os.path.isfile(os.path.join(model_abs, 'results.json')):
+        return jsonify({'error': _('eval.already_exists')}), 400
 
     iterations = [d for d in os.listdir(os.path.join(model_abs, 'point_cloud'))
                   if os.path.isfile(os.path.join(model_abs, 'point_cloud', d, 'point_cloud.ply'))]
@@ -46,17 +49,20 @@ def start_eval():
     has_vq = os.path.isfile(os.path.join(model_abs, 'extreme_saving.zip'))
 
     task_manager = TaskManager.instance()
-    task_id = task_manager.start_task(
-        'eval',
-        {
-            'model_path': model_rel,
-            'iteration': iteration,
-            'compare_vq': compare_vq and has_vq,
-            'skip_train': data.get('skip_train', 'true').lower() == 'true',
-            'lang': session.get('lang', 'zh'),
-        },
-        lambda task: _run_evaluation(task)
-    )
+    try:
+        task_id = task_manager.start_task(
+            'eval',
+            {
+                'model_path': model_rel,
+                'iteration': iteration,
+                'compare_vq': compare_vq and has_vq,
+                'skip_train': data.get('skip_train', 'true').lower() == 'true',
+                'lang': session.get('lang', 'zh'),
+            },
+            lambda task: _run_evaluation(task)
+        )
+    except TaskConflictError:
+        return jsonify({'error': _('task.active_blocked')}), 409
     return jsonify({'task_id': task_id, 'redirect': url_for('tasks.list_tasks')})
 
 

@@ -1,15 +1,14 @@
 import os
 import sys
 from argparse import Namespace
-from unittest.mock import patch
 
-from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, session
+from flask import Blueprint, render_template, request, jsonify, url_for, session
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from ui.config import DATASET_ROOT, MODEL_ROOT
-from ui.forms import scan_datasets, scan_models, build_train_args
-from ui.task_manager import TaskManager
+from ui.forms import scan_datasets, scan_models
+from ui.task_manager import TaskManager, TaskConflictError
 from ui.translations import make_translator
 
 train_bp = Blueprint('train', __name__)
@@ -25,6 +24,7 @@ def train_form():
 
 @train_bp.route('/start', methods=['POST'])
 def start_train():
+    _ = make_translator(session.get('lang', 'zh'))
     data = request.form
     scene_path = data.get('source_path', '')
     if not scene_path or not os.path.isdir(scene_path):
@@ -36,20 +36,23 @@ def start_train():
         model_path = os.path.join(MODEL_ROOT, scene_rel)
 
     task_manager = TaskManager.instance()
-    task_id = task_manager.start_task(
-        'train',
-        {
-            'source_path': scene_path,
-            'model_path': model_path,
-            'resolution': data.get('resolution', '-1'),
-            'sh_degree': data.get('sh_degree', '3'),
-            'iterations': data.get('iterations', '30000'),
-            'v_pow': data.get('v_pow', '0.1'),
-            'eval': data.get('eval', 'true'),
-            'lang': session.get('lang', 'zh'),
-        },
-        lambda task: _run_training(task)
-    )
+    try:
+        task_id = task_manager.start_task(
+            'train',
+            {
+                'source_path': scene_path,
+                'model_path': model_path,
+                'resolution': data.get('resolution', '-1'),
+                'sh_degree': data.get('sh_degree', '3'),
+                'iterations': data.get('iterations', '30000'),
+                'v_pow': data.get('v_pow', '0.1'),
+                'eval': data.get('eval', 'true'),
+                'lang': session.get('lang', 'zh'),
+            },
+            lambda task: _run_training(task)
+        )
+    except TaskConflictError:
+        return jsonify({'error': _('task.active_blocked')}), 409
     return jsonify({'task_id': task_id, 'redirect': url_for('tasks.list_tasks')})
 
 
@@ -60,9 +63,9 @@ def _run_training(task):
     from argparse import ArgumentParser
 
     parser = ArgumentParser(add_help=False)
-    ModelParams(parser, sentinel=True)
-    OptimizationParams(parser)
-    PipelineParams(parser)
+    lp = ModelParams(parser, sentinel=True)
+    op = OptimizationParams(parser)
+    pp = PipelineParams(parser)
 
     defaults = parser.parse_args([])
     args_dict = vars(defaults)
@@ -97,15 +100,23 @@ def _run_training(task):
     import gaussian_renderer.network_gui as network_gui
     original_init = network_gui.init
     network_gui.init = lambda *a, **kw: None
+    train_module = None
+    previous_args = None
 
     try:
-        from train import training
-        training(
+        import train as train_module
+        previous_args = getattr(train_module, 'args', None)
+        train_module.args = args
+        train_module.training(
             lp.extract(args), op.extract(args), pp.extract(args),
             args.test_iterations, args.save_iterations,
             args.checkpoint_iterations, args.start_checkpoint, args.debug_from
         )
     finally:
+        if train_module is not None and previous_args is None and hasattr(train_module, 'args'):
+            delattr(train_module, 'args')
+        elif train_module is not None and previous_args is not None:
+            train_module.args = previous_args
         network_gui.init = original_init
 
     print(_('log.training_complete'))

@@ -28,6 +28,19 @@ def task_status(task_id):
     })
 
 
+@tasks_bp.route('/summary')
+def task_summary():
+    active_task = TaskManager.instance().get_active_task()
+    return jsonify({
+        'has_active_task': active_task is not None,
+        'active_task': {
+            'id': active_task.id,
+            'type': active_task.type,
+            'status': active_task.status,
+        } if active_task else None,
+    })
+
+
 @tasks_bp.route('/<task_id>/log')
 def task_log(task_id):
     task = TaskManager.instance().get_task(task_id)

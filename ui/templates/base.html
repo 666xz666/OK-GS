@@ -53,10 +53,14 @@
       task_started: "{{ _('js.task_started') }}",
       task_status: "{{ _('js.task_status') }}",
       connecting: "{{ _('js.connecting') }}",
+      active_task_blocked: "{{ _('js.active_task_blocked') }}",
       badge_pending: "{{ _('tasks.badge_pending') }}",
       badge_running: "{{ _('tasks.badge_running') }}",
       badge_completed: "{{ _('tasks.badge_completed') }}",
       badge_failed: "{{ _('tasks.badge_failed') }}"
+    };
+    window.APP_STATE = {
+      hasActiveTask: {{ 'true' if has_active_task else 'false' }}
     };
   </script>
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
